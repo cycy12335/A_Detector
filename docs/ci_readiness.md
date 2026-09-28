@@ -13,6 +13,12 @@
 > 在拿到具体 `OWNER/REPO` 与资产发布授权之前，P3 的 CI 项仍然未完成。
 > 详见 `docs/ci_github.md`。
 
+> **2026-09-28 托管验证补记**：上述未解决项是 CW-012 当时的审计结论。
+> CW-014 已在私有仓库 `cycy12335/A_Detector` 完成
+> [GitHub Actions 成功运行 #36414156557](https://github.com/cycy12335/A_Detector/actions/runs/36414156557)；
+> bundle 由私有 Release 供给，工作流报告静态 0 违规、回归 12/12、pytest 1910/0/0/0。
+> 现状态为 `waiting_acceptance`，详见 `docs/ci_github.md` 第 6 节。
+
 登记在册的输入由 `project_gate/ci_inputs.py` 的 `CI_INPUTS` 描述；该清单与
 `configs/quality_gate.yaml` 的 `inputs` 段由测试断言逐项一致，因此新增必填输入却忘了登记
 会被测试抓住。

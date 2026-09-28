@@ -1,7 +1,7 @@
 # CW-014 GitHub Actions 托管质量门禁
 
-本文件记录 GitHub CI 的操作方式、权限边界、资产发布清单，以及**尚未具备的外部条件**。
-它在托管 run 真实成功之前不声称 P3 的 CI 项已完成。
+本文件记录 GitHub CI 的操作方式、权限边界、资产发布清单和真实托管运行证据。
+CW-014 已实施并等待独立验收。
 
 - 工作流：`.github/workflows/quality-gate.yml`
 - 依赖约束：`constraints/cw014-ci.txt`（全部 `==` 精确锁定）
@@ -62,19 +62,19 @@ bundle 的路径与摘要来自 `configs/quality_gate.yaml`；`configs/ci_inputs
 2. 全量套件还需要 CW-003 规则基线状态；现在由随源码提交的夹具供给（508 B 纯合成 JSON，
    无路径、无数据、无可执行内容）。
 
-## 4. 资产发布清单（上传前需项目负责人确认）
+## 4. 资产发布记录
 
 | 项目 | 值 |
 | --- | --- |
 | 文件 | `artifacts/models/cw004/lightgbm_bundle.joblib` |
 | 大小 | 55,619 B |
 | SHA-256 | `f02bb50e61c5f70c85448430c8bb653bd6e347f400220771500ee84a70135a1c` |
-| 建议位置 | 目标 GitHub 仓库的**私有** Release，资产名 `lightgbm_bundle.joblib` |
+| 发布位置 | 私有仓库 `cycy12335/A_Detector` 的 Release `cw014-ci-inputs-v1`，资产名 `lightgbm_bundle.joblib` |
 | 可读范围 | 仅该私有仓库有读权限者（含 Actions 的 `GITHUB_TOKEN`） |
 | 必需仓库变量 | `CW014_RELEASE_TAG`（Release 标签；缺失时工作流立即失败） |
 | **不发布** | IEEE-CIS 原始/处理数据、默认数据库、任何凭据 |
 
-**尚未授权执行**：本包没有创建仓库、没有上传任何资产、也没有配置远端。
+项目负责人已指定仓库并确认上传。下载已复核大小与 SHA-256；模型二进制未进入 Git。
 
 ## 5. 重跑方式
 
@@ -94,15 +94,25 @@ bundle 的路径与摘要来自 `configs/quality_gate.yaml`；`configs/ci_inputs
 三份报告都只含相对路径、摘要、大小、状态与计数，不含 token、模型内容、原始数据、
 请求特征或数据库行。
 
-## 6. 仍未完成的条件（**阻断托管验证**）
+## 6. 真实托管验证
 
-| 条件 | 状态 |
+| 项目 | 结果 |
 | --- | --- |
-| CI 平台 | ✅ 已确定：GitHub |
-| 仓库 `OWNER/REPO` 与可见性 | ❌ **未提供**（用户已选"私有仓库"，但未给出具体仓库名） |
-| 模型资产发布授权（私有 Release） | ✅ 原则同意，❌ **尚未指定目标仓库** |
-| 本机 `gh` CLI | ❌ 未安装（创建仓库/上传 Release/触发 run 都需要它或等价的网页操作） |
-| 真实托管 run | ❌ **尚不存在** |
+| 仓库 | 私有 `cycy12335/A_Detector`，默认分支 `main` |
+| 触发与提交 | `push`，`dd2f4de074b440ae1f1c87db61e530435c38380b` |
+| 成功运行 | [Actions #36414156557](https://github.com/cycy12335/A_Detector/actions/runs/36414156557) |
+| 环境 | Windows Server 2025，Python 3.14.7；ruff 0.14.4，pytest 9.1.1，LightGBM 4.7.0，NumPy 2.5.3 |
+| 输入 | bundle `verified`，CW-003 状态夹具 `placed`，默认库 `not_required`；预检四项冻结摘要全部匹配 |
+| 阶段 | 静态 `passed` / 0 违规；CW-009 `passed` / 回归 12/12 / 最大偏差 0.0 / 确定性 true；pytest 1910 passed / 0 skipped / 0 failed / 0 errors；总门禁 exit 0 |
+| 报告 | 工作流上传 `cw014-reports`，含 CW-009、CW-012、CW-014 三份安全 JSON |
 
-**在拿到具体 `OWNER/REPO` 之前无法推送或运行**；按验收标准，本包状态记为 `blocked`
-而不是 `waiting_acceptance`——缺少托管 run 记录时不得声称 P3 hosted CI 已完成。
+首次 [Actions #36413240635](https://github.com/cycy12335/A_Detector/actions/runs/36413240635)
+在全量 pytest 出现 9 个夹具准备错误。原因是 CW-013 隔离副本测试把默认 SQLite
+当作必需文件，和 CI 的 `not_required` 输入约定冲突。提交 `dd2f4de` 将默认库快照改为
+可选：存在时比较字节摘要，不存在时检查运行后仍不存在；其它冻结输入继续强制校验。
+
+托管计数相对本地 1907 passed / 3 skipped 多 3 项通过、少 3 项跳过，总用例数相同。
+本机已提供真实 IEEE-CIS 数据，因此三个“数据缺失时应失败”的用例按条件跳过；
+干净检出的托管环境没有这些数据，三个用例正常执行并通过。托管报告仅含状态、摘要、版本与计数。
+
+当前实施状态为 `waiting_acceptance`；独立验收后方可将 CW-014 标记为 `passed`。

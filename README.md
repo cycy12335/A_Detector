@@ -82,7 +82,7 @@ CW-012（已验收）：
   冻结规则集静态检查  →  本地单命令总门禁  →  CI 输入可复现性审计
 CW-013（已验收）：
   离线导出交付包  →  按冻结摘要导入  →  隔离源码副本里复现总门禁
-CW-014（本地就绪，托管验证被阻断）：
+CW-014（已实施，待独立验收）：
   GitHub Actions 干净检出  →  校验三项输入  →  原样运行总门禁
 ```
 
@@ -1456,8 +1456,8 @@ CW-012 的审计说"bundle 是唯一被忽略的**门禁**输入"——这对 **
 
 CW-014 把已有的本地总门禁搬上 **GitHub Actions**：干净检出 → 独立安装受约束依赖 →
 按冻结摘要校验三项被忽略输入 → 原样运行 `python scripts/run_project_gate.py`。
-平台由用户确定为 GitHub；**工作流已落地但尚未真实运行**（缺具体仓库），因此
-**P3 的 CI 项仍未完成**。
+平台为 GitHub；工作流已在私有仓库 `cycy12335/A_Detector` 的 `main` 分支真实运行成功。
+CW-014 实施状态为 `waiting_acceptance`，等待独立验收。
 
 ### 关键文件
 
@@ -1500,18 +1500,20 @@ LightGBM 预测不保证跨平台逐位一致，换平台必须先单独验证�
 python scripts/ci_fetch_inputs.py
 python scripts/run_project_gate.py
 
-# 需要在 GitHub 上做（拿到 OWNER/REPO 之后）
-#   Actions → quality-gate → Run workflow；报告作为 artifact 上传
+# GitHub：Actions → quality-gate → Run workflow；报告作为 artifact 上传
 ```
 
 完整隔离复现（无 `artifacts/**` 的源码副本里跑完整门禁）见
 [docs/bundle_delivery.md](docs/bundle_delivery.md)。
 
-### 未完成条件
+### 托管运行记录
 
-具体 `OWNER/REPO` 未提供、`gh` CLI 未安装、bundle 尚未上传到私有 Release，
-因此**没有真实托管 run 记录**。按验收标准，本包状态记为 `blocked`，不得声称
-hosted CI 已通过。所需清单见 [docs/ci_github.md](docs/ci_github.md) 第 4、6 节。
+私有 Release `cw014-ci-inputs-v1` 提供冻结 bundle；仓库变量 `CW014_RELEASE_TAG` 指向该标签。
+GitHub Actions [成功运行 #36414156557](https://github.com/cycy12335/A_Detector/actions/runs/36414156557)
+在提交 `dd2f4de074b440ae1f1c87db61e530435c38380b` 上完成：静态 0 违规、模型回归
+12/12、全量 pytest **1910 passed / 0 skipped / 0 failed / 0 errors**。第一次托管运行发现
+CW-013 隔离夹具仍假定默认库必然存在，现已修正。详细证据和限制见
+[docs/ci_github.md](docs/ci_github.md) 第 6 节；CW-014 仍待独立验收。
 
 ## 产物位置
 
