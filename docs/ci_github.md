@@ -1,7 +1,7 @@
 # CW-014 GitHub Actions 托管质量门禁
 
 本文件记录 GitHub CI 的操作方式、权限边界、资产发布清单和真实托管运行证据。
-CW-014 已实施并等待独立验收。
+CW-014 已独立验收通过；托管门禁覆盖受信任的默认分支与手动触发。
 
 - 工作流：`.github/workflows/quality-gate.yml`
 - 依赖约束：`constraints/cw014-ci.txt`（全部 `==` 精确锁定）
@@ -99,8 +99,8 @@ bundle 的路径与摘要来自 `configs/quality_gate.yaml`；`configs/ci_inputs
 | 项目 | 结果 |
 | --- | --- |
 | 仓库 | 私有 `cycy12335/A_Detector`，默认分支 `main` |
-| 触发与提交 | `push`，`dd2f4de074b440ae1f1c87db61e530435c38380b` |
-| 成功运行 | [Actions #36414156557](https://github.com/cycy12335/A_Detector/actions/runs/36414156557) |
+| 触发与提交 | `push`，`34ba5cc0800907ba4998606ca3cdb014e6cee91f` |
+| 成功运行 | [Actions #36415890918](https://github.com/cycy12335/A_Detector/actions/runs/36415890918) |
 | 环境 | Windows Server 2025，Python 3.14.7；ruff 0.14.4，pytest 9.1.1，LightGBM 4.7.0，NumPy 2.5.3 |
 | 输入 | bundle `verified`，CW-003 状态夹具 `placed`，默认库 `not_required`；预检四项冻结摘要全部匹配 |
 | 阶段 | 静态 `passed` / 0 违规；CW-009 `passed` / 回归 12/12 / 最大偏差 0.0 / 确定性 true；pytest 1910 passed / 0 skipped / 0 failed / 0 errors；总门禁 exit 0 |
@@ -115,4 +115,4 @@ bundle 的路径与摘要来自 `configs/quality_gate.yaml`；`configs/ci_inputs
 本机已提供真实 IEEE-CIS 数据，因此三个“数据缺失时应失败”的用例按条件跳过；
 干净检出的托管环境没有这些数据，三个用例正常执行并通过。托管报告仅含状态、摘要、版本与计数。
 
-当前实施状态为 `waiting_acceptance`；独立验收后方可将 CW-014 标记为 `passed`。
+CW-014 已独立验收通过。工作流目前只在受信任 `main` 推送和手动触发时运行；不受信任 PR 的完整门禁仍待后续设计。

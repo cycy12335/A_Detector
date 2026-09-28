@@ -22,7 +22,7 @@
 
 - 项目阶段：P3 质量保障与模型回归
 - 当前任务：`CW-014` / `TASK-20260928-001`
-- 状态：`CW-014` GitHub Actions 托管运行成功，待独立验收（`waiting_acceptance`）；`CW-013` 已验收
+- 状态：`CW-014` 已独立验收通过（`passed`）；`CW-013` 已验收
 - 规范入口：`.handoff/latest.md` 与 `.handoff/tasks/TASK-20260928-001/`
 
 ## 这是什么
@@ -82,7 +82,7 @@ CW-012（已验收）：
   冻结规则集静态检查  →  本地单命令总门禁  →  CI 输入可复现性审计
 CW-013（已验收）：
   离线导出交付包  →  按冻结摘要导入  →  隔离源码副本里复现总门禁
-CW-014（已实施，待独立验收）：
+CW-014（已验收）：
   GitHub Actions 干净检出  →  校验三项输入  →  原样运行总门禁
 ```
 
@@ -1458,7 +1458,7 @@ CW-013 当时尚无 Git 仓库、托管平台、交付包的分发与保管决�
 CW-014 把已有的本地总门禁搬上 **GitHub Actions**：干净检出 → 独立安装受约束依赖 →
 按冻结摘要校验三项被忽略输入 → 原样运行 `python scripts/run_project_gate.py`。
 平台为 GitHub；工作流已在私有仓库 `cycy12335/A_Detector` 的 `main` 分支真实运行成功。
-CW-014 实施状态为 `waiting_acceptance`，等待独立验收。
+CW-014 已独立验收通过；托管门禁目前覆盖受信任的 `main` 推送和手动触发。
 
 ### 关键文件
 
@@ -1510,11 +1510,11 @@ python scripts/run_project_gate.py
 ### 托管运行记录
 
 私有 Release `cw014-ci-inputs-v1` 提供冻结 bundle；仓库变量 `CW014_RELEASE_TAG` 指向该标签。
-GitHub Actions [成功运行 #36414156557](https://github.com/cycy12335/A_Detector/actions/runs/36414156557)
-在提交 `dd2f4de074b440ae1f1c87db61e530435c38380b` 上完成：静态 0 违规、模型回归
+GitHub Actions [成功运行 #36415890918](https://github.com/cycy12335/A_Detector/actions/runs/36415890918)
+在提交 `34ba5cc0800907ba4998606ca3cdb014e6cee91f` 上完成：静态 0 违规、模型回归
 12/12、全量 pytest **1910 passed / 0 skipped / 0 failed / 0 errors**。第一次托管运行发现
 CW-013 隔离夹具仍假定默认库必然存在，现已修正。详细证据和限制见
-[docs/ci_github.md](docs/ci_github.md) 第 6 节；CW-014 仍待独立验收。
+[docs/ci_github.md](docs/ci_github.md) 第 6 节；CW-014 已独立验收通过。
 
 ## 产物位置
 
