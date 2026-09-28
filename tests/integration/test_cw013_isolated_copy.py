@@ -68,20 +68,27 @@ GATE_CONFIG_REL = "configs/quality_gate.yaml"
 #: 真实工作目录中的冻结文件：本轮验证不得改动它们。
 FROZEN_REL = (
     "artifacts/models/cw004/lightgbm_bundle.joblib",
-    "artifacts/runtime/cw007_decisions.sqlite3",
     "configs/quality_gate.yaml",
     "tests/fixtures/cw009/model_regression_cases.json",
 )
+DEFAULT_DB_REL = "artifacts/runtime/cw007_decisions.sqlite3"
 
 
 def _digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _frozen_snapshot() -> dict[str, str | None]:
+    snapshot = {relative: _digest(PROJECT_ROOT / relative) for relative in FROZEN_REL}
+    default_db = PROJECT_ROOT / DEFAULT_DB_REL
+    snapshot[DEFAULT_DB_REL] = _digest(default_db) if default_db.is_file() else None
+    return snapshot
+
+
 @pytest.fixture(scope="module")
 def isolated() -> dict:
     """建一次隔离副本 + 独立 venv，模块内共用；结束后清理并复核真实产物未变。"""
-    before = {relative: _digest(PROJECT_ROOT / relative) for relative in FROZEN_REL}
+    before = _frozen_snapshot()
     directory = STAGE_ROOT / uuid.uuid4().hex
     copy_root = directory / "checkout"
     build_isolated_copy(PROJECT_ROOT, copy_root)
@@ -90,7 +97,7 @@ def isolated() -> dict:
         yield {"copy": copy_root, "python": interpreter, "stage": directory}
     finally:
         shutil.rmtree(directory, ignore_errors=True)
-    after = {relative: _digest(PROJECT_ROOT / relative) for relative in FROZEN_REL}
+    after = _frozen_snapshot()
     assert before == after, "隔离验证不得改动真实工作目录的冻结文件"
 
 
