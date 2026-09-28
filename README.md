@@ -22,7 +22,7 @@
 
 - 项目阶段：P3 质量保障与模型回归
 - 当前任务：`CW-014` / `TASK-20260928-001`
-- 状态：`CW-014` 本地准备完成、托管验证被阻断（`blocked`，缺具体 GitHub 仓库）；`CW-013` 已验收
+- 状态：`CW-014` GitHub Actions 托管运行成功，待独立验收（`waiting_acceptance`）；`CW-013` 已验收
 - 规范入口：`.handoff/latest.md` 与 `.handoff/tasks/TASK-20260928-001/`
 
 ## 这是什么
@@ -1370,8 +1370,8 @@ CW-009 的状态/回归/pytest 计数与四个输入的 `match` 标志、环境�
 失败精确指向被忽略的 bundle。**静态阶段不会伪造整体通过**：同一配置下静态如实
 `passed`，整体仍 `failed`、退出码 5。
 
-因此 **P3 的 CI 项未完成**：本包没有 `.git`、没有托管平台、也没有可信的 bundle 供给方式，
-所以**不创建**任何平台的流水线文件，也不声称 hosted CI 已运行。
+**CW-012 当时的结论**：P3 的 CI 项尚未完成；当时没有 `.git`、托管平台或可信的 bundle
+供给方式，因此该包没有创建流水线文件或声称 hosted CI 已运行。CW-014 已完成后续托管落地。
 完整清单、四种可选 bundle 供给路径及其代价见 [docs/ci_readiness.md](docs/ci_readiness.md)。
 
 ## P3 / 可信模型产物交付与隔离复现（CW-013）
@@ -1444,13 +1444,14 @@ CW-012 的审计说"bundle 是唯一被忽略的**门禁**输入"——这对 **
 隔离验证发现**全量 pytest** 还需要 `artifacts/models/cw003/rule_baseline_state.json`
 与 `artifacts/runtime/cw007_decisions.sqlite3`。它们在真实工作目录里存在，干净检出里
 没有，因此首次隔离运行实测 3 项失败（另一项是副本漏了已提交的 `.gitignore`，已修正）。
-这两个产物的**可信供给方式仍未确定**。
+在 CW-013 阶段，这两个产物的可信供给方式**尚未确定**；CW-014 已用已审查夹具供给
+CW-003 状态，并消除全量测试对默认数据库的依赖。
 
-### 仍未完成
+### CW-013 结束时的未完成项（现由 CW-014 处理）
 
-**P3 的 CI 项仍未完成**：没有 `.git`、没有托管平台、没有交付包的分发与保管决定、
-没有依赖隔离，也**没有在本平台真实运行过一次的流水线**。本包只交付本地可信搬运与
-隔离复现，操作步骤、限制与未解决项见 [docs/bundle_delivery.md](docs/bundle_delivery.md)。
+CW-013 当时尚无 Git 仓库、托管平台、交付包的分发与保管决定或独立 CI 依赖环境；
+该包只交付本地可信搬运与隔离复现。后续托管落地见下一节；当时的操作与限制见
+[docs/bundle_delivery.md](docs/bundle_delivery.md)。
 
 ## P3 / GitHub Actions 托管质量门禁（CW-014）
 
