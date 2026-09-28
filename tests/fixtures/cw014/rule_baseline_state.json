@@ -1,0 +1,16 @@
+{
+  "name": "transparent_tail_anomaly",
+  "kind": "unsupervised_tail_heuristic",
+  "fields": [
+    "TransactionAmt",
+    "C13"
+  ],
+  "quantile": 0.99,
+  "thresholds": {
+    "TransactionAmt": 1092.0,
+    "C13": 580.0
+  },
+  "scoring": "mean_of_indicators",
+  "train_rows": 354324,
+  "disclaimer": "该基线不使用标签，不对应任何已确认的业务含义，也不是真实机构使用的反欺诈规则。 它只用于提供一个完全透明、可人工复核的下界参照。"
+}

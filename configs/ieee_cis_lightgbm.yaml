@@ -1,0 +1,136 @@
+# CW-004 / IEEE-CIS LightGBM 挑战者配置
+#
+# 所有相对路径相对项目根目录解析；不得写入绝对路径、凭据或机器专属值。
+# 本文件自身参与版本标识：脚本会计算 SHA-256 并写入报告（config_sha256）。
+#
+# 纪律（本工作包的核心）：
+#   - 特征契约不复制、不重定义：本文件只**引用**已验收的 CW-003 配置与其 feature manifest，
+#     并硬校验两者的 SHA-256、kept 列计数（194 数值 + 5 类别）与转换维度（348）。
+#   - 下面的模型参数在**第一次真实训练之前**即已冻结，不得依据 validation 或 test 指标修改；
+#     不允许超参数搜索，也不允许试多组参数后挑最好结果。
+#   - test 只在两次无 test 候选运行（A/B）的确定性核对通过、且模型与全部阈值冻结之后
+#     评估一次；不得据 test 结果回改本文件并覆盖首次结果。
+
+work_package: CW-004
+seed: 42
+
+# --- 前置产物门禁：只引用，不复制 ---------------------------------------
+cw003:
+  work_package: CW-003
+  # 已验收的 CW-003 建模配置：提供数据路径、CW-002 切分、431 列允许清单、
+  # train-only 列决策规则、预处理语义、99 个阈值网格与 3 个成本场景。
+  config_path: configs/ieee_cis_baseline.yaml
+  expected_config_sha256: 2883c5bbf45f969fb84fe790d7b24f7a00db0ca9c7831e955a9419c0881a8368
+  # 已验收的特征契约：kept 列必须逐项一致，否则本工作包立即失败。
+  feature_manifest_path: artifacts/reports/cw003_ieee_cis_baselines/feature_manifest.json
+  expected_feature_manifest_sha256: afb73c212c8838b1d940c8d594b1a1f730f27039137741ed65d4b2bd80e8d589
+  expected_kept_numeric: 194
+  expected_kept_categorical: 5
+  expected_transformed_dimension: 348
+  expected_output_format: sparse_csr
+  # 三基线来源报告：只读取其已验收结果与来源指纹，**不重新评估**它们的 test。
+  report_path: artifacts/reports/cw003_ieee_cis_baselines/report.json
+  baseline_keys:
+    - rule_tail_anomaly
+    - dummy
+    - logistic_regression
+  # 已验收模型产物：只校验存在性，不重新拟合、不重新评估。
+  required_artifacts:
+    - artifacts/models/cw003/logistic_regression_pipeline.joblib
+    - artifacts/models/cw003/dummy_pipeline.joblib
+    - artifacts/models/cw003/rule_baseline_state.json
+  # CW-003 协议任务状态必须为 passed，否则本工作包不得开工。
+  prerequisite_task_status: .handoff/tasks/TASK-20260921-002/status.json
+  prerequisite_required_status: passed
+
+# --- 模型：第一次真实训练前冻结，禁止搜索 -------------------------------
+model:
+  type: LGBMClassifier
+  params:
+    boosting_type: gbdt
+    objective: binary
+    n_estimators: 1000
+    learning_rate: 0.05
+    num_leaves: 31
+    max_depth: -1
+    min_child_samples: 20
+    subsample: 1.0
+    colsample_bytree: 1.0
+    reg_alpha: 0.0
+    reg_lambda: 0.0
+    random_state: 42
+    n_jobs: 1
+    deterministic: true
+    force_col_wise: true
+    verbosity: -1
+  # 类别不平衡：只由 **train** 标签计算，不使用 validation/test。
+  imbalance:
+    strategy: scale_pos_weight
+    formula: train_negative_count / train_positive_count
+  early_stopping:
+    validation_partition: validation
+    metric: binary_logloss
+    stopping_rounds: 50
+    first_metric_only: true
+  # API 兼容性说明：只允许因 API 名称/类型兼容作等价调整，且在**看到 test 之前**记录。
+  # 本条调整不改变任何模型超参数、特征、阈值或成本场景。
+  api_compatibility_notes:
+    - >-
+      lightgbm 4.7.0 的 LGBMClassifier.fit 已弃用 eval_set 关键字（LGBMDeprecationWarning：
+      "The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead"），
+      因此早停评估集通过 eval_X / eval_y 传入。这是 API 名称的等价调整，
+      不改动任何冻结参数；调整在第一次真实训练之前记录。
+    - >-
+      早停使用 LightGBM callback API（lightgbm.early_stopping），不使用已废弃的
+      early_stopping_rounds 构造参数；first_metric_only=True、verbose=False。
+  # 参数来源：CW-004 任务结果中的固定参数记录（首次真实训练前冻结，无搜索）。
+  param_source: .handoff/tasks/TASK-20260924-001/result.md CW-004 固定参数记录
+
+# --- 确定性核对 ---------------------------------------------------------
+determinism:
+  # 候选运行 A 与 B 的浮点比较容差：纯绝对误差。
+  absolute_tolerance: 1.0e-12
+  relative_tolerance: 0.0
+  compared_items:
+    - kept_numeric
+    - kept_categorical
+    - transformed_dimension
+    - output_format
+    - scale_pos_weight
+    - best_iteration
+    - validation_scores
+    - frozen_thresholds
+    - validation_confusion_matrix
+    - aggregated_gain_importance
+    - aggregated_split_importance
+
+# --- 特征重要性（只做 gain / split，聚合回源特征）-----------------------
+importance:
+  types: [gain, split]
+  aggregation: source_feature
+  top_n_in_report: 30
+  # 明确禁止的做法，写入报告以免读者误读。
+  forbidden_analyses:
+    - SHAP
+    - Permutation Importance
+    - Partial Dependence (PDP)
+    - 概率校准
+    - 匿名字段的业务语义解释
+
+paths:
+  outputs:
+    report_dir: artifacts/reports/cw004_lightgbm
+    report_json: artifacts/reports/cw004_lightgbm/report.json
+    report_markdown: artifacts/reports/cw004_lightgbm/report.md
+    threshold_curve_csv: artifacts/reports/cw004_lightgbm/threshold_curve.csv
+    comparison_csv: artifacts/reports/cw004_lightgbm/comparison.csv
+    feature_importance_csv: artifacts/reports/cw004_lightgbm/feature_importance.csv
+    model_dir: artifacts/models/cw004
+    bundle: artifacts/models/cw004/lightgbm_bundle.joblib
+
+limits:
+  # 评估分区与一次性评估纪律
+  evaluation_partition: test
+  single_shot_test: true
+  # 允许的最大阈值曲线行数（防止产物无界膨胀）。
+  max_threshold_curve_rows: 5000

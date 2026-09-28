@@ -1,0 +1,56 @@
+# CW-009 / 固定模型回归集与一键质量门禁配置
+#
+# 纪律：
+#   - 所有输入/输出都是**项目根目录下的规范相对路径**：不得写绝对路径、盘符、UNC、
+#     反斜杠、`.`/`..` 组件或连续斜杠；解析后还会做一次"不得越出项目根"的检查。
+#   - 四个输入各自冻结完整的小写 SHA-256。门禁**先在二进制层面**核对这四个指纹，
+#     任一不符就不 joblib.load、不解析 YAML/JSON、不推理、不跑 pytest，直接退出 2。
+#   - `pytest.arguments` 只允许恰好 ["-m", "pytest"]；容差上限锁死在 1e-6。
+#     因此配置文件无法把门禁改指向别的测试选择器，也无法放宽 golden master 比较。
+#   - 本文件不提供任何"跳过哈希 / 放宽容差 / 更新 oracle / 接受当前结果"的开关。
+
+quality_gate:
+  schema_version: cw009_quality_gate_config_v1
+  work_package: CW-009
+
+  inputs:
+    # CW-005/CW-006/CW-007/CW-008 已验收的服务配置：模型版本、政策段与存储段的事实来源。
+    service_config:
+      path: configs/service.yaml
+      sha256: 4dd211557214cee85abf1f427f72bfcec3510f6a4d01a928becb141fffb1c865
+
+    # CW-004 已验收 bundle（55,619 B）。模型分数与冻结阈值都只来自它。
+    bundle:
+      path: artifacts/models/cw004/lightgbm_bundle.joblib
+      sha256: f02bb50e61c5f70c85448430c8bb653bd6e347f400220771500ee84a70135a1c
+      model_version: cw004-lightgbm-challenger-v1
+      expected_source_features: 199
+
+    # CW-006 已验收政策：两条 train-only q0.99 尾部规则与冻结融合真值表。
+    policy:
+      path: configs/risk_policy.yaml
+      sha256: 7ed07f0b784715c01b444035bb34ea5166d1b376ff07e10428561d898d6824f0
+      policy_version: cw006-risk-policy-v1
+      expected_rule_count: 2
+
+    # CW-009 固定回归语料：12 个纯合成 case，含全部 199 个源特征与冻结期望。
+    # 语料是 golden master。它只能通过显式评审后重新生成，runner 没有任何改写模式。
+    corpus:
+      path: tests/fixtures/cw009/model_regression_cases.json
+      sha256: d58166b70223af0adb443b9acff0690e6e3c571110dc11b16c2395a8d6fdc4b0
+      case_count: 12
+
+  comparison:
+    # 分数比较只允许**绝对**容差，且必须极小：golden master 要的是"逐值不变"。
+    # 禁止相对容差、禁止四舍五入后比较、禁止只比较聚合指标。
+    score_absolute_tolerance: 1.0e-12
+
+  pytest:
+    # 解释器固定为当前进程的 sys.executable；这里冻结的是模块调用形状。
+    arguments: ["-m", "pytest"]
+    # 有限超时（秒）。超时后子进程被 kill 并回收，退出码 5。
+    timeout_seconds: 1800.0
+
+  report:
+    # 唯一产物，继续被 .gitignore 的 artifacts/** 规则排除。
+    path: artifacts/reports/cw009_quality_gate/report.json

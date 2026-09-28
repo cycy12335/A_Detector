@@ -1,0 +1,2 @@
+# 该目录用于存放 scripts/generate_data.py 生成的模拟交易 CSV。
+# 生成的数据文件已被 .gitignore 排除，不进入版本控制。

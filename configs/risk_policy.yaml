@@ -1,0 +1,55 @@
+# CW-006 / 版本化透明规则政策（research_signal_band）
+#
+# ## 这是什么
+#
+# 两条**公开、透明、可人工复核**的尾部规则，把"取值超过训练分区 0.99 分位"记为一次命中。
+# 阈值来自 CW-003 透明规则基线状态（`artifacts/models/cw003/rule_baseline_state.json`）
+# 在 **train 分区**上拟合出的分位数，不是按任何业务经验、也不是在 validation/test 上挑出来的。
+#
+# ## 这不是什么
+#
+#   - 不是任何机构的真实反欺诈规则，不代表已确认的业务含义，也**不为匿名字段 C13 编造含义**；
+#   - 不是欺诈概率：模型分数未校准，规则命中数只是计数；
+#   - 不是生产处置：本政策不产生批准/拒绝/拦截，只输出研究型信号等级。
+#
+# ## 语义纪律（改动本文件会使 service.yaml 中的固定 SHA-256 失效，服务随即降级为未就绪）
+#
+#   - 比较运算符固定为严格 `>`：恰好等于阈值**不命中**；
+#   - 规则字段只接受有限整数/浮点；null、字符串、非有限数一律视为**不可评估**，
+#     不做字符串到数字的隐式转换，整体等级为 `indeterminate`；
+#   - 融合：模型 flagged 计 2 点、每条命中规则计 1 点；0=low_signal、1-2=elevated_signal、
+#     3-4=high_signal；rule_score = 命中规则数 / 2。
+#
+# 这些冻结语义在代码里另有硬不变量（`src/ai_detector/rules/config.py`），
+# 单靠修改本文件无法放宽它们——修改只会让哈希校验失败并触发安全降级。
+
+policy:
+  schema_version: cw006_policy_v1
+  policy_version: cw006-risk-policy-v1
+  semantics: research_signal_band
+  threshold_source: cw003_train_only_q0.99
+
+  rules:
+    - rule_id: transaction_amt_train_q99_tail
+      feature: TransactionAmt
+      operator: gt
+      threshold: 1092.0
+    - rule_id: c13_train_q99_tail
+      feature: C13
+      operator: gt
+      threshold: 580.0
+
+  fusion:
+    flagged_signal_points: 2
+    matched_rule_signal_points: 1
+    rule_score_denominator: 2
+    bands:
+      low_signal: [0, 0]
+      elevated_signal: [1, 2]
+      high_signal: [3, 4]
+
+  disclaimer: >-
+    本政策是公开匿名 IEEE-CIS 数据**训练分区**统计得到的透明演示信号，不是任何机构的业务规则、
+    不是欺诈概率、不是因果结论，也不构成生产处置依据。两条阈值只表示"该字段取值超过训练分区
+    0.99 分位"，其中 C13 是匿名特征，本项目不为它赋予任何业务含义。风险等级只用于展示
+    "模型信号 + 规则信号"的可解释融合方式，不得当作模型效果或生产适用性证据。

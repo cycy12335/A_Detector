@@ -1,0 +1,42 @@
+# CW-014 / CI 输入清单：干净检出运行总门禁所需的三个被忽略输入
+#
+# 纪律：
+#   - `bundle` 的 path / sha256 / size **必须**与 `configs/quality_gate.yaml` 的
+#     `quality_gate.inputs.bundle` 逐项一致；`scripts/ci_fetch_inputs.py` 会交叉核对，
+#     不一致就以退出码 3 失败关闭。这里是转述，不是第二授权来源。
+#   - 每个输入的 `supply` 只能是：`release_asset`（受控资产，下载后逐字节校验）、
+#     `committed_fixture`（经审查入库的夹具）、`not_required`（已用测试夹具消除依赖）。
+#   - 任何输入都先按 SHA-256 校验**字节**再放到目标路径；缺失或不符一律失败关闭。
+#   - 原始 IEEE-CIS 数据、模型二进制、默认数据库、报告、虚拟环境、密钥**不进入 Git**。
+
+ci_inputs:
+  schema_version: cw014_ci_inputs_v1
+  work_package: CW-014
+
+  inputs:
+    bundle:
+      path: artifacts/models/cw004/lightgbm_bundle.joblib
+      sha256: f02bb50e61c5f70c85448430c8bb653bd6e347f400220771500ee84a70135a1c
+      size: 55619
+      supply: release_asset
+      fixture: null
+      trust: "本仓库 CW-004 训练入口在本机产出的已验收 bundle；唯一可信来源是自己重训，不使用来源不明的替代品。"
+      note: "上传到项目负责人指定的**私有** Release；CI 用最小权限 GITHUB_TOKEN 下载后由 ci_fetch_inputs.py 逐字节校验。"
+
+    rule_baseline_state:
+      path: artifacts/models/cw003/rule_baseline_state.json
+      sha256: bf152b4be284b2d34b31c7cf6a9d619628863dcf6353007df48283053551eca3
+      size: 508
+      supply: committed_fixture
+      fixture: tests/fixtures/cw014/rule_baseline_state.json
+      trust: "CW-003 训练产出的透明规则阈值状态（train-only q0.99 尾部启发式）。"
+      note: "508 B 纯合成 JSON：只有字段名、阈值与免责声明，无路径、无数据、无可执行内容；经审查后入库。tests/unit/test_cw006_policy_config.py 需要它来核对政策阈值与 CW-003 状态一致。"
+
+    default_decisions_db:
+      path: artifacts/runtime/cw007_decisions.sqlite3
+      sha256: 318907df567ec6fc8e2886c25a49413fc499f1dbc00110db397e161a72dcd7ed
+      size: 40960
+      supply: not_required
+      fixture: null
+      trust: "运行时产物；验收标准明确要求默认数据库不进入 Git。"
+      note: "CW-014 采用「测试夹具消除依赖」：把「默认库不被整轮测试改写」改成会话级守卫（tests/conftest.py 的 guard_default_database），既不依赖开发机数据库、也不再断言某个固定字节摘要。CI 不再需要该文件；若它意外存在，ci_fetch_inputs.py 仍会校验摘要并在不符时失败关闭。"

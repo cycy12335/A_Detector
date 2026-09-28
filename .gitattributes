@@ -1,0 +1,7 @@
+# CW-014: these files are SHA-256-locked as raw bytes by the quality gate.
+# Disable Git line-ending conversion so a clean Windows checkout has the accepted bytes.
+configs/service.yaml -text
+configs/risk_policy.yaml -text
+configs/quality_gate.yaml -text
+tests/fixtures/cw009/model_regression_cases.json -text
+tests/fixtures/cw014/rule_baseline_state.json -text

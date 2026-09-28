@@ -1,0 +1,67 @@
+# CW-005 / 只读风险评分服务配置
+#
+# 所有相对路径相对项目根目录解析；不得写入绝对路径、凭据或机器专属值。
+# 本服务**只读**：不训练、不访问 IEEE-CIS 原始 CSV、不读取 test 标签或逐行数据。
+#
+# 纪律：
+#   - bundle 是**受信任的本地产物**：先按下面的 sha256 流式校验，通过后才允许 joblib 反序列化。
+#   - 指纹不符、依赖缺失或契约校验失败时应用仍可启动，但 ready/评分接口返回 503；
+#     不下载、不重训、不回退到其它模型。
+#   - 默认只监听 127.0.0.1，且没有认证、限流与 TLS —— 不得直接暴露到公网。
+
+service:
+  name: ai-detector-risk-scoring
+  api_version: v1
+  # 模型标识（人类可读的版本号，不是文件路径）。
+  model_version: cw004-lightgbm-challenger-v1
+  # 默认只监听本机回环地址。
+  host: 127.0.0.1
+  port: 8000
+  # 批量评分上限：超过即 422，整个批次不执行任何评分。
+  batch_limit: 100
+  # 请求 ID 的 header 名；缺失时服务端生成 UUID4。
+  request_id_header: X-Request-ID
+  # 分数语义：固定字符串，禁止改写成 probability / fraud_probability。
+  score_semantics: uncalibrated_model_score
+  # 阈值策略：冻结阈值来自 CW-004 在 validation 上选出的 F1 阈值。
+  threshold_policy: validation_f1
+  # 契约要求：bundle 必须恰好提供这么多唯一源特征。
+  expected_source_features: 199
+
+bundle:
+  # 必须相对项目根目录；绝对路径或越出根目录的路径会被拒绝。
+  path: artifacts/models/cw004/lightgbm_bundle.joblib
+  # CW-004 已验收 bundle 的固定指纹（55,619 B）。不符即拒绝加载。
+  sha256: f02bb50e61c5f70c85448430c8bb653bd6e347f400220771500ee84a70135a1c
+  expected_schema_version: cw004_bundle_v1
+
+# CW-006 / 版本化透明规则政策。
+#
+# 纪律与 bundle 段一致：先按下面的 sha256 **流式**校验，通过后才允许 yaml.safe_load。
+# 政策缺失、指纹不符或 schema 错误时，应用**仍然启动**：CW-005 的评分接口继续可用，
+# `/v1/policy`、`/v1/risk/evaluate`、`/v1/risk/evaluate/batch` 与 `/health/ready` 返回
+# 503 `policy_not_ready`。**不会**回退到内置默认政策，也不会静默改用其它阈值。
+# 本段整体可以缺省（缺省即"未配置政策"），配置层不会因此拒绝启动。
+policy:
+  # 必须相对项目根目录；绝对路径、盘符路径、`..` 逃逸与疑似凭据路径都会被拒绝。
+  path: configs/risk_policy.yaml
+  # 冻结政策的固定指纹：两条 train-only q0.99 尾部规则的完整声明。
+  sha256: 7ed07f0b784715c01b444035bb34ea5166d1b376ff07e10428561d898d6824f0
+  expected_schema_version: cw006_policy_v1
+
+# CW-007 / 最小化决策记录持久化（标准库 sqlite3，无新依赖）。
+#
+# 数据库只保存**求值产生的派生结果**：版本、分数、规则求值事实与研究型等级。
+# 不保存 features、特征名/值、请求或响应体、header、原始 path/query、凭据或标签。
+#
+# 路径被限制成唯一形状 `artifacts/runtime/<文件名>.sqlite3`（项目相对）：
+# 绝对路径、盘符、UNC、`..` 逃逸、其它目录与其它扩展名一律拒绝。
+# 本段整体可以缺省（缺省即"未配置存储"：应用仍启动，只有 `/v1/decisions/*` 降级为 503）。
+storage:
+  path: artifacts/runtime/cw007_decisions.sqlite3
+  schema_version: cw008_storage_v2
+
+limits:
+  # X-Request-ID 的长度与字符集约束（1-64 位 ASCII）。
+  max_request_id_length: 64
+  request_id_pattern: "^[A-Za-z0-9._:-]{1,64}$"

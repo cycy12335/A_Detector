@@ -1,0 +1,33 @@
+# CW-014 / GitHub Actions 依赖约束（Windows + CPython 3.14）
+#
+# 目的：让干净 runner 装出与**本机已验收基线**一致的可执行环境，而不是复用开发机的
+# site-packages。全部用 `==` 精确锁定；这些版本对应 CW-004 bundle 训练与 CW-009 golden
+# master 冻结时的环境（numpy 2.5.3 / pandas 3.0.6 / scikit-learn 1.9.1 / lightgbm 4.7.0）。
+#
+# 用法（工作流中）：
+#   python -m pip install -c constraints/cw014-ci.txt -e ".[test,service,tree,static]"
+#
+# 为什么连 pytest / ruff / locust 都锁：全量套件会真实运行它们，且 pytest 的计数与
+# ruff 的诊断码都属于冻结预期的一部分。
+#
+# 数值风险（须在真实 runner 上验证，不得凭本机结果推断）：CW-009 golden master 用
+# 1e-12 的**绝对**容差比较模型分数。LightGBM 的预测在不同平台/指令集/线程数下不保证
+# 逐位一致，因此工作流固定使用 windows-latest（与本机同平台）。若托管运行出现回归
+# 偏差，应先如实记录并按 CW-009 的容差规则处理，不得放宽容差或更新 oracle。
+
+numpy==2.5.3
+pandas==3.0.6
+scikit-learn==1.9.1
+joblib==1.6.0
+PyYAML==6.0.3
+lightgbm==4.7.0
+fastapi==0.141.1
+pydantic==2.13.5
+pydantic_core==2.46.5
+uvicorn==0.53.0
+httpx==0.28.1
+starlette==1.7.0
+anyio==4.15.1
+pytest==9.1.1
+ruff==0.14.4
+locust==2.46.6

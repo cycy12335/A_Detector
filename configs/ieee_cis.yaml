@@ -1,0 +1,88 @@
+# CW-002 / IEEE-CIS 数据契约与审计配置
+#
+# 所有相对路径都相对项目根目录解析。禁止在本文件写入个人绝对路径、凭据或机器专属信息。
+# 原始数据由使用者本人同意 Kaggle 条款后手动放置，本仓库不包含、不下载、不转发任何逐行数据。
+
+dataset:
+  id: ieee_cis_fraud_detection
+  display_name: IEEE-CIS Fraud Detection
+  # 版本说明：数据本身没有发布版本号，因此以"来源 + 竞赛 slug + 文件指纹"共同标识版本。
+  # 真实版本以 audit.json 中记录的 SHA-256 为准；本字段只描述来源，不声称任何数据快照。
+  version_note: >-
+    未知版次（Kaggle 竞赛数据集，无官方版本号）。以官方数据页 + 文件名 + 运行时计算的
+    SHA-256 共同标识。竞赛可能在不通知的情况下更新文件，因此任何结论都必须连同指纹一起引用。
+  provider: Vesta Corporation
+  organizer: IEEE Computational Intelligence Society
+  official_data_url: https://www.kaggle.com/competitions/ieee-fraud-detection/data
+  official_rules_url: https://www.kaggle.com/competitions/ieee-fraud-detection/rules
+  license_note: >-
+    受 Kaggle 竞赛规则与数据提供方条款约束。使用者须自行在官方规则页确认使用权限。
+    本仓库不复制条款全文，也不对条款作解释。
+
+files:
+  # 以 raw_dir + 文件名解析，报告中只记录相对路径。
+  raw_dir: data/raw/ieee_cis
+  transactions:
+    name: train_transaction.csv
+    required: true
+  identity:
+    name: train_identity.csv
+    required: true
+
+columns:
+  join_key: TransactionID
+  target: isFraud
+  split_time: TransactionDT
+
+split:
+  # 目标比例；因时间并列保护，实际比例允许略有偏差。
+  train_ratio: 0.6
+  validation_ratio: 0.2
+  # 同一个 TransactionDT 的所有交易必须进入同一分区，因此边界取"时间值"而非"行号"。
+  strategy: temporal_tie_safe
+  # 分区标签率的计算只看目标列，不参与任何特征选择。
+  min_partition_rows: 1
+
+# 禁止进入候选特征的列。target/join_key/split_time 由 columns 段声明，
+# 这里只列出因其他原因排除的列（列名 -> 原因）。
+forbidden_features:
+  - column: isFraud
+    reason: 目标列，只能作为标签，绝不可作为特征。
+  - column: TransactionID
+    reason: 连接键/标识列，唯一值直接编码行身份，作为特征等于泄漏行顺序与切分位置。
+  - column: TransactionDT
+    reason: 原始时间列，仅用于时间切分；作为特征会把时间与分区边界泄漏给模型。
+
+# 匿名列前缀：这些列的真实业务语义无法从列名确认，必须登记风险而不是编造含义。
+anonymous_prefixes:
+  - V
+  - C
+  - D
+  - M
+  - id_
+
+profiling:
+  # 分块读取，避免一次性把宽表读入内存。transaction 文件约 394 列，
+  # 25000 行/块时单块数值内存约 80 MB，为后续统计留出余量。
+  chunk_size: 25000
+  # 唯一值计数的上限；超过则记录为截断标记，而不是无限增长集合。
+  max_tracked_unique: 20000
+  # 数值列分位数来自固定种子的蓄水池抽样，属近似值，报告中必须标注。
+  quantile_sample_size: 20000
+  quantiles:
+    - 0.01
+    - 0.25
+    - 0.5
+    - 0.75
+    - 0.99
+  # 类别列只保留有限数量的高频取值摘要，避免报告无限膨胀。
+  max_category_summaries: 10
+  sample_seed: 42
+
+output:
+  report_dir: artifacts/reports/cw002_ieee_cis
+  audit_json: artifacts/reports/cw002_ieee_cis/audit.json
+  audit_markdown: artifacts/reports/cw002_ieee_cis/audit.md
+  column_profile_csv: artifacts/reports/cw002_ieee_cis/column_profile.csv
+  split_manifest: artifacts/reports/cw002_ieee_cis/split_manifest.json
+  processed_dir: data/processed/ieee_cis

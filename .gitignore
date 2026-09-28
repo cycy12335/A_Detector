@@ -1,0 +1,64 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# --- 虚拟环境 ---
+.venv/
+venv/
+env/
+
+# --- 测试与类型检查缓存 ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- 密钥与本地配置（禁止提交） ---
+.env
+.env.*
+*.pem
+*.key
+secrets.*
+!.env.example
+
+# --- 生成的大体积数据（保留目录说明） ---
+data/generated/*
+!data/generated/.gitkeep
+
+# --- IEEE-CIS 原始数据：绝不提交（保留放置说明） ---
+data/raw/ieee_cis/*
+!data/raw/ieee_cis/README.md
+# 兜底：即使放在其他 raw 子目录下也不提交数据文件
+data/raw/**/*.csv
+data/raw/**/*.zip
+data/raw/**/*.gz
+data/raw/**/*.parquet
+data/raw/**/*.feather
+data/raw/**/*.7z
+data/raw/**/*.tar
+
+# --- IEEE-CIS 处理中间层：不提交生成产物（保留目录说明） ---
+data/processed/ieee_cis/*
+!data/processed/ieee_cis/README.md
+
+# --- 生成产物：模型二进制与报告 ---
+artifacts/**/*
+!artifacts/README.md
+!artifacts/**/.gitkeep
+
+# --- 本机协作记录：不发布（含本机绝对路径与用户名） ---
+# CW-014 决定：这些是本地协作记录，不属于要发布的源码/文档；
+# 它们含本机绝对路径与用户名（形如 C:\Users\<账户名>、D:\<项目目录>）。
+.handoff/
+WORK_LOG.md
+CLAUDE.md
+
+# --- 编辑器与系统 ---
+.idea/
+.vscode/
+Thumbs.db
+desktop.ini

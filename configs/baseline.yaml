@@ -1,0 +1,52 @@
+# CW-001 基线训练配置
+#
+# 所有相对路径都相对项目根目录（ai_detector/）解析，因此命令从项目根目录执行时
+# 不受当前工作目录影响。禁止在此写入任何个人绝对路径或密钥。
+
+seed: 42
+
+input_path: data/generated/transactions.csv
+report_path: artifacts/reports/cw001_baseline_report.json
+model_dir: artifacts/models
+
+split:
+  # 按时间先后切分，训练 60% / 验证 20% / 测试 20%。
+  # 不使用随机切分：随机切分会把同一时间窗口的交易同时放进训练集和测试集。
+  train_ratio: 0.6
+  validation_ratio: 0.2
+
+# 阈值候选网格。固定网格不依赖任何数据分布，保证换数据或换种子时候选集合不变。
+threshold_grid:
+  - 0.05
+  - 0.10
+  - 0.15
+  - 0.20
+  - 0.25
+  - 0.30
+  - 0.35
+  - 0.40
+  - 0.45
+  - 0.50
+  - 0.55
+  - 0.60
+  - 0.65
+  - 0.70
+  - 0.75
+  - 0.80
+  - 0.85
+  - 0.90
+  - 0.95
+
+models:
+  dummy:
+    type: dummy_classifier
+    params:
+      strategy: prior
+  logistic_regression:
+    type: logistic_regression
+    params:
+      # class_weight=balanced 按类别频率反向加权，避免 5% 正例下退化为全预测正常。
+      class_weight: balanced
+      C: 1.0
+      solver: lbfgs
+      max_iter: 1000

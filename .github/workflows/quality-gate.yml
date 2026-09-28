@@ -1,0 +1,101 @@
+# CW-014 / GitHub Actions：托管质量门禁
+#
+# 目标：在**干净检出**里真实运行 `python scripts/run_project_gate.py`（静态检查 +
+# CW-009 完整门禁：preflight → regression → pytest），并留下可审查的运行记录。
+#
+# 三条硬约束：
+#   1. 不复用开发机 venv/site-packages：依赖由 constraints/cw014-ci.txt 精确锁定后现装。
+#   2. 三项被忽略输入**先按 SHA-256 校验字节**再使用；缺失或不符即失败关闭
+#      （由 scripts/ci_fetch_inputs.py 实现，退出码 2）。
+#   3. 最小权限：GITHUB_TOKEN 只有 `contents: read`（读私有 Release 资产所必需），
+#      不写仓库、不读其它 secret。
+#
+# 权限边界（不受信任 PR）：本工作流**只**由 workflow_dispatch 与默认分支的 push 触发，
+# 没有 pull_request / pull_request_target 触发，因此外部 PR 既不会拿到 token，
+# 也不会读模型资产。PR 路径需要单独的、无模型访问权的设计，属于后续工作。
+#
+# runner 选择：windows-latest，与本机已验收基线同平台。CW-009 golden master 用 1e-12
+# 绝对容差比较模型分数，而 LightGBM 预测不保证跨平台逐位一致——换平台前必须先验证回归。
+
+name: quality-gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+# 同一分支上新的运行会取消尚未完成的旧运行，避免并发占用。
+concurrency:
+  group: quality-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: utf-8
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  CW014_BUNDLE_ASSET: lightgbm_bundle.joblib
+  CW014_BUNDLE_DIR: artifacts/models/cw004
+
+jobs:
+  quality-gate:
+    name: static + CW-009 gate (windows / py3.14)
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout（不保留凭据，浅克隆）
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: 安装固定 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: 记录解释器版本
+        run: python -c "import sys; print('python', sys.version)"
+
+      - name: 安装受约束依赖（不使用开发机 site-packages）
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -c constraints/cw014-ci.txt -e ".[test,service,tree,static]"
+          python -m pip check
+
+      - name: 下载已验收 bundle（私有 Release 资产）
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ vars.CW014_RELEASE_TAG }}
+        run: |
+          if (-not $env:RELEASE_TAG) {
+            Write-Error "缺少仓库变量 CW014_RELEASE_TAG：无法定位已验收 bundle 的 Release。"
+            exit 2
+          }
+          New-Item -ItemType Directory -Force -Path "$env:CW014_BUNDLE_DIR" | Out-Null
+          gh release download "$env:RELEASE_TAG" `
+            --repo "${{ github.repository }}" `
+            --pattern "$env:CW014_BUNDLE_ASSET" `
+            --dir "$env:CW014_BUNDLE_DIR"
+        shell: pwsh
+
+      - name: 校验并放置三项被忽略输入（失败关闭）
+        run: python scripts/ci_fetch_inputs.py
+
+      - name: 运行本地总门禁（静态检查 + 完整 CW-009 链路）
+        run: python scripts/run_project_gate.py
+
+      - name: 上传安全报告（无论成功失败都留证据）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cw014-reports
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            artifacts/reports/cw012_project_gate/report.json
+            artifacts/reports/cw009_quality_gate/report.json
+            artifacts/reports/cw014_ci/inputs_report.json
