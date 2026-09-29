@@ -7,3 +7,4 @@ tests/fixtures/cw009/model_regression_cases.json -text
 tests/fixtures/cw014/rule_baseline_state.json -text
 README.md text eol=lf
 docs/ci_github.md text eol=lf
+configs/retrieval_sources.json text eol=lf
