@@ -1516,6 +1516,23 @@ GitHub Actions [成功运行 #36415890918](https://github.com/cycy12335/A_Detect
 CW-013 隔离夹具仍假定默认库必然存在，现已修正。详细证据和限制见
 [docs/ci_github.md](docs/ci_github.md) 第 6 节；CW-014 已独立验收通过。
 
+## P4 / 可追溯规则知识库与离线检索（CW-015）
+
+CW-015 建立一个只读、完全离线的规则证据入口：`configs/risk_policy.yaml` 是规则语义的唯一权威，
+README 与操作文档只能解释限制，不能覆盖政策。来源清单会固定项目相对路径、SHA-256、版本和原文
+行范围；构建时来源缺失、篡改、版本漂移或定位越界都会失败关闭。
+
+```powershell
+python scripts/build_retrieval_index.py
+python scripts/retrieve_rules.py "严格大于阈值 等于不命中" --top-k 3
+python scripts/evaluate_retrieval.py --top-k 5
+```
+
+检索只返回带 `citation_id`、来源摘要、版本和定位的已审查片段；无匹配时返回空结果，不编造引用。
+评测集是合成且人工审查的，指标由脚本真实计算。检索分数不是模型分数、概率或风险等级；本包不接入
+LLM、外部向量服务或真实交易数据，也不生成批准/拒绝/拦截建议。完整 schema、限制和重建方式见
+[docs/retrieval.md](docs/retrieval.md)。
+
 ## 产物位置
 
 | 路径 | 内容 | 是否提交 Git |

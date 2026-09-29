@@ -1,0 +1,42 @@
+{
+  "schema_version": "cw015_sources_v1",
+  "knowledge_base_version": "cw015-rules-v1",
+  "sources": [
+    {
+      "source_id": "risk-policy",
+      "path": "configs/risk_policy.yaml",
+      "sha256": "7ed07f0b784715c01b444035bb34ea5166d1b376ff07e10428561d898d6824f0",
+      "version": "cw006-risk-policy-v1",
+      "authority": "policy",
+      "fragments": [
+        {"chunk_id": "cw015-policy-context", "line_start": 3, "line_end": 7, "locator": "policy comments: definition and train-only threshold source", "tags": ["policy", "threshold", "train-only"]},
+        {"chunk_id": "cw015-policy-limitations", "line_start": 9, "line_end": 13, "locator": "policy comments: non-business-rule and non-production limitations", "tags": ["policy", "limitations", "anonymous"]},
+        {"chunk_id": "cw015-policy-comparison", "line_start": 15, "line_end": 21, "locator": "policy comments: strict comparison and fusion semantics", "tags": ["policy", "strict-greater-than", "fusion"]},
+        {"chunk_id": "cw015-policy-version", "line_start": 26, "line_end": 30, "locator": "policy.schema_version through threshold_source", "tags": ["policy", "version", "threshold-source"]},
+        {"chunk_id": "cw015-policy-rules", "line_start": 32, "line_end": 40, "locator": "policy.rules[0..1]", "tags": ["policy", "rules", "threshold"]},
+        {"chunk_id": "cw015-policy-fusion", "line_start": 42, "line_end": 55, "locator": "policy.fusion and disclaimer", "tags": ["policy", "fusion", "disclaimer"]}
+      ]
+    },
+    {
+      "source_id": "readme-data-limits",
+      "path": "README.md",
+      "sha256": "b315279602b303e1864f095bb6ec21356e1baab5038538e3abea1bbbe359470c",
+      "version": "repository-main-2026-09-29",
+      "authority": "explanation",
+      "fragments": [
+        {"chunk_id": "cw015-readme-anonymous", "line_start": 298, "line_end": 302, "locator": "P1 data engineering limitations", "tags": ["explanation", "anonymous", "data-boundary"]}
+      ]
+    },
+    {
+      "source_id": "ci-boundary-doc",
+      "path": "docs/ci_github.md",
+      "sha256": "8f2a6ed7bb3a1830c42f1fbd3601193f233e66ad0733a661de0d16676422e51a",
+      "version": "cw014-doc-v1",
+      "authority": "explanation",
+      "fragments": [
+        {"chunk_id": "cw015-ci-platform-boundary", "line_start": 24, "line_end": 26, "locator": "CI runner and cross-platform numeric validation limitation", "tags": ["explanation", "ci", "limitation"]},
+        {"chunk_id": "cw015-ci-access-boundary", "line_start": 32, "line_end": 42, "locator": "CI permissions and untrusted PR boundary", "tags": ["explanation", "security", "access-boundary"]}
+      ]
+    }
+  ]
+}

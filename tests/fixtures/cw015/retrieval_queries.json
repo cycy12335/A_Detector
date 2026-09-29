@@ -1,0 +1,15 @@
+{
+  "schema_version": "cw015_queries_v1",
+  "dataset_version": "cw015-synthetic-reviewed-v1",
+  "queries": [
+    {"query_id": "q-two-rules", "query": "两条规则 TransactionAmt C13", "relevant_ids": ["cw015-policy-rules"], "expected_empty": false},
+    {"query_id": "q-threshold-source", "query": "阈值来自 train 分区 0.99 分位", "relevant_ids": ["cw015-policy-context", "cw015-policy-version"], "expected_empty": false},
+    {"query_id": "q-strict-boundary", "query": "严格大于阈值 等于不命中", "relevant_ids": ["cw015-policy-comparison"], "expected_empty": false},
+    {"query_id": "q-anonymous-c13", "query": "C13 匿名特征 不编造业务含义", "relevant_ids": ["cw015-policy-limitations", "cw015-policy-fusion"], "expected_empty": false},
+    {"query_id": "q-score-limit", "query": "模型分数 未校准 不是欺诈概率", "relevant_ids": ["cw015-policy-limitations", "cw015-policy-fusion"], "expected_empty": false},
+    {"query_id": "q-production-limit", "query": "批准 拒绝 拦截 生产处置", "relevant_ids": ["cw015-policy-limitations", "cw015-policy-fusion"], "expected_empty": false},
+    {"query_id": "q-ci-boundary", "query": "GitHub Actions 权限 外部 PR token", "relevant_ids": ["cw015-ci-access-boundary"], "expected_empty": false},
+    {"query_id": "q-unsupported", "query": "客户姓名 手机号码 家庭住址", "relevant_ids": [], "expected_empty": true},
+    {"query_id": "q-misleading", "query": "某笔交易一定欺诈 概率 生产处置", "relevant_ids": ["cw015-policy-limitations", "cw015-policy-fusion"], "expected_empty": false}
+  ]
+}
