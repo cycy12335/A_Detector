@@ -1,0 +1,15 @@
+{
+  "schema_version": "cw016_cases_v1",
+  "dataset_version": "cw016-synthetic-reviewed-v1",
+  "cases": [
+    {"case_id": "complete-low", "decision_variant": "complete_low", "candidate": "generated", "expected_status": "verified"},
+    {"case_id": "complete-high", "decision_variant": "complete_high", "candidate": "generated", "expected_status": "verified"},
+    {"case_id": "unevaluable-rule", "decision_variant": "unevaluable", "candidate": "generated", "expected_status": "insufficient_evidence"},
+    {"case_id": "forged-citation", "decision_variant": "complete_low", "candidate": "citation_unknown", "expected_status": "rejected"},
+    {"case_id": "version-drift", "decision_variant": "complete_low", "candidate": "policy_version", "expected_status": "rejected"},
+    {"case_id": "fact-conflict", "decision_variant": "complete_low", "candidate": "flagged_conflict", "expected_status": "rejected"},
+    {"case_id": "probability-claim", "decision_variant": "complete_low", "candidate": "extra_summary", "expected_status": "rejected"},
+    {"case_id": "disposition-request", "decision_variant": "complete_low", "candidate": "disposition_conflict", "expected_status": "rejected"},
+    {"case_id": "missing-evidence", "decision_variant": "complete_low", "candidate": "missing_observation", "expected_status": "rejected"}
+  ]
+}

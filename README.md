@@ -1533,6 +1533,21 @@ python scripts/evaluate_retrieval.py --top-k 5
 LLM、外部向量服务或真实交易数据，也不生成批准/拒绝/拦截建议。完整 schema、限制和重建方式见
 [docs/retrieval.md](docs/retrieval.md)。
 
+## P4 / 结构化调查草稿与证据校验（CW-016）
+
+CW-016 在 CW-015 检索基线之上定义有限的结构化候选草稿：输入只接受既有 `DecisionRecord` 的派生
+字段，观察只能引用同一政策版本和摘要的已审查 citation。候选必须经过独立事实/引用校验；规则不可
+评估时只能标记 `insufficient_evidence`，不会把分数当概率，也不会给出批准、拒绝或拦截建议。
+
+```powershell
+python scripts/evaluate_investigation.py
+python -m pytest tests/unit/test_cw016_investigation.py -q
+```
+
+评测使用人工审查的合成决策与恶意候选，不读取真实交易数据、默认数据库，不调用 LLM 或外部服务。
+格式、事实一致性和证据完整率由脚本从实际校验结果计算。详细 schema、失败行为和限制见
+[docs/investigation_draft.md](docs/investigation_draft.md)。
+
 ## 产物位置
 
 | 路径 | 内容 | 是否提交 Git |
