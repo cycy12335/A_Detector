@@ -32,6 +32,12 @@ _FORBIDDEN_SOURCE_PARTS = {
     "raw",
     "processed",
 }
+_APPROVED_SOURCES = {
+    "configs/risk_policy.yaml": ("risk-policy", "policy", "cw006-risk-policy-v1"),
+    "README.md": ("readme-data-limits", "explanation", "repository-main-2026-09-29"),
+    "docs/ci_github.md": ("ci-boundary-doc", "explanation", "cw014-doc-v1"),
+}
+_FROZEN_POLICY_SHA256 = "7ed07f0b784715c01b444035bb34ea5166d1b376ff07e10428561d898d6824f0"
 
 
 class SourceManifestError(ValueError):
@@ -153,6 +159,7 @@ def _parse_manifest(raw: Any) -> tuple[SourceSpec, ...]:
         raise SourceManifestError("manifest_schema_invalid", "sources 必须是非空列表")
     parsed: list[SourceSpec] = []
     seen_ids: set[str] = set()
+    seen_paths: set[str] = set()
     for index, item in enumerate(sources):
         label = f"sources[{index}]"
         _exact_keys(item, {"source_id", "path", "sha256", "version", "authority", "fragments"}, label)
@@ -170,6 +177,11 @@ def _parse_manifest(raw: Any) -> tuple[SourceSpec, ...]:
         authority = item["authority"]
         if not isinstance(version, str) or not version.strip() or authority not in {"policy", "explanation"}:
             raise SourceManifestError("manifest_schema_invalid", f"{label}.version/authority 不合法")
+        if _APPROVED_SOURCES.get(path) != (source_id, authority, version) or path in seen_paths:
+            raise SourceManifestError("source_not_allowed", f"{label} 不属于已审查的来源与版本")
+        seen_paths.add(path)
+        if authority == "policy" and sha256 != _FROZEN_POLICY_SHA256:
+            raise SourceManifestError("policy_version_mismatch", "政策摘要不属于已验收版本")
         fragments = item["fragments"]
         if not isinstance(fragments, list) or not fragments:
             raise SourceManifestError("manifest_schema_invalid", f"{label}.fragments 必须非空")
@@ -198,6 +210,8 @@ def _parse_manifest(raw: Any) -> tuple[SourceSpec, ...]:
                 {"chunk_id": chunk_id, "line_start": start, "line_end": end, "locator": fragment["locator"], "tags": tuple(tags)}
             )
         parsed.append(SourceSpec(source_id, path, sha256, version, authority, tuple(parsed_fragments)))
+    if seen_paths != set(_APPROVED_SOURCES):
+        raise SourceManifestError("source_missing", "已审查来源清单不完整")
     return tuple(parsed)
 
 
@@ -205,6 +219,8 @@ def load_source_manifest(path: str | Path = MANIFEST_PATH) -> tuple[SourceSpec, 
     """读取来源清单；只接受项目相对路径，并在解析前验证清单本身的 JSON 形状。"""
     relative = _assert_relative_path(str(path), label="manifest.path")
     manifest_path = resolve_path(relative)
+    if not manifest_path.resolve().is_relative_to(PROJECT_ROOT.resolve()):
+        raise SourceManifestError("source_path_unsafe", "来源清单解析后越出项目根")
     if not manifest_path.is_file():
         raise SourceManifestError("manifest_missing", "来源清单不存在")
     try:
@@ -334,15 +350,13 @@ class RetrievalIndex:
             scored.append((score, chunk, matched))
         scored.sort(key=lambda item: (-item[0], item[1].chunk_id))
         selected: list[RetrievalHit] = []
-        used_chars = 0
+        used_chars = 2  # JSON 数组的方括号
         for score, chunk, matched in scored[:top_k]:
-            citation_overhead = len(json.dumps(chunk.citation(), ensure_ascii=False))
-            item_chars = len(chunk.text) + citation_overhead
-            if item_chars > max_output_chars:
+            hit = RetrievalHit(chunk, round(score, 8), matched)
+            item_chars = len(json.dumps(hit.as_dict(), ensure_ascii=False)) + 2 * int(bool(selected))
+            if used_chars + item_chars > max_output_chars:
                 continue
-            if selected and used_chars + item_chars > max_output_chars:
-                break
-            selected.append(RetrievalHit(chunk, round(score, 8), matched))
+            selected.append(hit)
             used_chars += item_chars
         return tuple(selected)
 

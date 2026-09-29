@@ -37,7 +37,7 @@ def test_every_citation_resolves_to_exact_source_lines() -> None:
 
 def test_source_tampering_fails_closed() -> None:
     raw = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    raw["sources"][0]["sha256"] = "0" * 64
+    raw["sources"][1]["sha256"] = "0" * 64
     relative_manifest = "tests/fixtures/cw015/cw015_manifest_hash_mismatch.json"
     staged_manifest = ROOT / relative_manifest
     staged_manifest.parent.mkdir(parents=True, exist_ok=True)
@@ -48,6 +48,28 @@ def test_source_tampering_fails_closed() -> None:
     finally:
         staged_manifest.unlink(missing_ok=True)
     assert error.value.code == "source_hash_mismatch"
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected_code"),
+    [
+        ("path", ".env", "source_not_allowed"),
+        ("version", "unreviewed-policy-v2", "source_not_allowed"),
+        ("sha256", "0" * 64, "policy_version_mismatch"),
+    ],
+)
+def test_unreviewed_source_or_policy_version_fails_closed(field: str, value: str, expected_code: str) -> None:
+    raw = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    raw["sources"][0][field] = value
+    relative_manifest = "tests/fixtures/cw015/cw015_manifest_unreviewed.json"
+    staged_manifest = ROOT / relative_manifest
+    staged_manifest.write_text(json.dumps(raw), encoding="utf-8")
+    try:
+        with pytest.raises(SourceManifestError) as error:
+            build_index(relative_manifest)
+    finally:
+        staged_manifest.unlink(missing_ok=True)
+    assert error.value.code == expected_code
 
 
 def test_manifest_rejects_path_escape_and_sensitive_source() -> None:
@@ -87,6 +109,9 @@ def test_retrieval_limits_top_k_and_output_size() -> None:
     with pytest.raises(RetrievalError) as output_error:
         index.retrieve("规则", max_output_chars=255)
     assert output_error.value.code == "output_limit_invalid"
+    for budget in (256, 1_000, 4_000):
+        hits = index.retrieve("规则 C13", top_k=10, max_output_chars=budget)
+        assert len(json.dumps([hit.as_dict() for hit in hits], ensure_ascii=False)) <= budget
 
 
 def test_fake_citation_is_rejected() -> None:
@@ -102,7 +127,9 @@ def test_reviewed_evaluation_is_computed_from_queries() -> None:
     report = evaluate(top_k=5)
     assert report["dataset_version"] == "cw015-synthetic-reviewed-v1"
     assert report["n_queries"] == 9
-    assert report["recall_at_k"] >= 0.8
-    assert report["mrr"] > 0.0
+    assert report["positive_queries"] == 8
+    assert report["recall_at_1"] == 0.5625
+    assert report["recall_at_k"] == 1.0
+    assert report["mrr"] == 0.90625
     assert report["negative_empty_rate"] == 1.0
 

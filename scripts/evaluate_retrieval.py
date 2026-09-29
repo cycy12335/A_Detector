@@ -29,9 +29,10 @@ def evaluate(*, top_k: int = 5) -> dict[str, Any]:
     index = build_index()
     dataset = _load_queries()
     queries = dataset["queries"]
-    hits_at_1 = 0
-    hits_at_k = 0
+    recall_at_1_total = 0.0
+    recall_at_k_total = 0.0
     reciprocal_rank = 0.0
+    positive_total = 0
     negative_total = 0
     negative_empty = 0
     details: list[dict[str, Any]] = []
@@ -40,10 +41,12 @@ def evaluate(*, top_k: int = 5) -> dict[str, Any]:
         hits = index.retrieve(item["query"], top_k=top_k)
         returned = [hit.chunk.chunk_id for hit in hits]
         ranks = [position for position, citation_id in enumerate(returned, start=1) if citation_id in expected]
-        if ranks:
-            hits_at_1 += int(ranks[0] == 1)
-            hits_at_k += 1
-            reciprocal_rank += 1.0 / ranks[0]
+        if expected:
+            positive_total += 1
+            recall_at_1_total += int(bool(returned) and returned[0] in expected) / len(expected)
+            recall_at_k_total += len(expected.intersection(returned)) / len(expected)
+            if ranks:
+                reciprocal_rank += 1.0 / ranks[0]
         if item["expected_empty"]:
             negative_total += 1
             negative_empty += int(not returned)
@@ -54,10 +57,11 @@ def evaluate(*, top_k: int = 5) -> dict[str, Any]:
         "dataset_version": dataset["dataset_version"],
         "knowledge_base_policy_versions": list(index.policy_versions),
         "n_queries": count,
+        "positive_queries": positive_total,
         "top_k": top_k,
-        "recall_at_1": hits_at_1 / count if count else 0.0,
-        "recall_at_k": hits_at_k / count if count else 0.0,
-        "mrr": reciprocal_rank / count if count else 0.0,
+        "recall_at_1": recall_at_1_total / positive_total if positive_total else 0.0,
+        "recall_at_k": recall_at_k_total / positive_total if positive_total else 0.0,
+        "mrr": reciprocal_rank / positive_total if positive_total else 0.0,
         "negative_queries": negative_total,
         "negative_empty_rate": negative_empty / negative_total if negative_total else 0.0,
         "details": details,
