@@ -30,7 +30,7 @@ def evaluate() -> dict[str, Any]:
     dataset = _load_cases()
     index = build_index()
     policy_chunk = next(chunk for chunk in index.chunks if chunk.authority == "policy")
-    outcomes: list[tuple[str, str, str]] = []
+    outcomes: list[tuple[str, str, bool, tuple[str, ...]]] = []
     for case in dataset["cases"]:
         snapshot = synthetic_decision(case["decision_variant"], policy_sha256=policy_chunk.source_sha256, policy_version=policy_chunk.source_version)
         context = build_context(snapshot, index)
@@ -38,19 +38,29 @@ def evaluate() -> dict[str, Any]:
         if case["candidate"] != "generated":
             candidate = mutate_candidate(candidate, case["candidate"])
         result = validate_candidate(candidate, snapshot, context, index)
-        outcomes.append((case["case_id"], result.status, case["expected_status"]))
+        expected = case["expected_status"]
+        expected_error = case["expected_error_code"]
+        correct = (
+            result.status == expected
+            and result.error_codes == ((expected_error,) if expected_error else ())
+            and (result.draft is not None) == (expected != "rejected")
+        )
+        outcomes.append((result.status, expected, correct, tuple(case["checks"])))
     count = len(outcomes)
-    expected_non_rejected = sum(expected != "rejected" for _case_id, _actual, expected in outcomes)
-    accepted_non_rejected = sum(actual == expected and expected != "rejected" for _case_id, actual, expected in outcomes)
+    fact_total = sum("fact" in checks for _actual, _expected, _correct, checks in outcomes)
+    evidence_total = sum("evidence" in checks for _actual, _expected, _correct, checks in outcomes)
     return {
         "schema_version": "cw016_evaluation_v1",
         "dataset_version": dataset["dataset_version"],
         "n_cases": count,
-        "expected_status_counts": {status: sum(expected == status for _case_id, _actual, expected in outcomes) for status in ("verified", "insufficient_evidence", "rejected")},
-        "observed_status_counts": {status: sum(actual == status for _case_id, actual, _expected in outcomes) for status in ("verified", "insufficient_evidence", "rejected")},
-        "format_success_rate": sum(actual == expected for _case_id, actual, expected in outcomes) / count if count else 0.0,
-        "fact_consistency_rate": accepted_non_rejected / expected_non_rejected if expected_non_rejected else 0.0,
-        "evidence_completeness_rate": accepted_non_rejected / expected_non_rejected if expected_non_rejected else 0.0,
+        "expected_status_counts": {status: sum(expected == status for _actual, expected, _correct, _checks in outcomes) for status in ("verified", "insufficient_evidence", "rejected")},
+        "observed_status_counts": {status: sum(actual == status for actual, _expected, _correct, _checks in outcomes) for status in ("verified", "insufficient_evidence", "rejected")},
+        "format_cases": count,
+        "fact_cases": fact_total,
+        "evidence_cases": evidence_total,
+        "format_success_rate": sum(correct for _actual, _expected, correct, _checks in outcomes) / count if count else 0.0,
+        "fact_consistency_rate": sum(correct for _actual, _expected, correct, checks in outcomes if "fact" in checks) / fact_total if fact_total else 0.0,
+        "evidence_completeness_rate": sum(correct for _actual, _expected, correct, checks in outcomes if "evidence" in checks) / evidence_total if evidence_total else 0.0,
         "policy_version": policy_chunk.source_version,
     }
 

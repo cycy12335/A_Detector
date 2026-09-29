@@ -2,14 +2,16 @@
   "schema_version": "cw016_cases_v1",
   "dataset_version": "cw016-synthetic-reviewed-v1",
   "cases": [
-    {"case_id": "complete-low", "decision_variant": "complete_low", "candidate": "generated", "expected_status": "verified"},
-    {"case_id": "complete-high", "decision_variant": "complete_high", "candidate": "generated", "expected_status": "verified"},
-    {"case_id": "unevaluable-rule", "decision_variant": "unevaluable", "candidate": "generated", "expected_status": "insufficient_evidence"},
-    {"case_id": "forged-citation", "decision_variant": "complete_low", "candidate": "citation_unknown", "expected_status": "rejected"},
-    {"case_id": "version-drift", "decision_variant": "complete_low", "candidate": "policy_version", "expected_status": "rejected"},
-    {"case_id": "fact-conflict", "decision_variant": "complete_low", "candidate": "flagged_conflict", "expected_status": "rejected"},
-    {"case_id": "probability-claim", "decision_variant": "complete_low", "candidate": "extra_summary", "expected_status": "rejected"},
-    {"case_id": "disposition-request", "decision_variant": "complete_low", "candidate": "disposition_conflict", "expected_status": "rejected"},
-    {"case_id": "missing-evidence", "decision_variant": "complete_low", "candidate": "missing_observation", "expected_status": "rejected"}
+    {"case_id": "complete-low", "decision_variant": "complete_low", "candidate": "generated", "expected_status": "verified", "expected_error_code": null, "checks": ["fact", "evidence"]},
+    {"case_id": "complete-high", "decision_variant": "complete_high", "candidate": "generated", "expected_status": "verified", "expected_error_code": null, "checks": ["fact", "evidence"]},
+    {"case_id": "unevaluable-rule", "decision_variant": "unevaluable", "candidate": "generated", "expected_status": "insufficient_evidence", "expected_error_code": null, "checks": ["fact", "evidence"]},
+    {"case_id": "forged-citation", "decision_variant": "complete_low", "candidate": "citation_unknown", "expected_status": "rejected", "expected_error_code": "citation_set_invalid", "checks": ["evidence"]},
+    {"case_id": "version-drift", "decision_variant": "complete_low", "candidate": "policy_version", "expected_status": "rejected", "expected_error_code": "policy_version_mismatch", "checks": ["evidence"]},
+    {"case_id": "fact-conflict", "decision_variant": "complete_low", "candidate": "flagged_conflict", "expected_status": "rejected", "expected_error_code": "fact_mismatch", "checks": ["fact"]},
+    {"case_id": "probability-claim", "decision_variant": "complete_low", "candidate": "extra_summary", "expected_status": "rejected", "expected_error_code": "draft_schema_invalid", "checks": ["fact"]},
+    {"case_id": "disposition-request", "decision_variant": "complete_low", "candidate": "disposition_conflict", "expected_status": "rejected", "expected_error_code": "draft_status_invalid", "checks": ["fact"]},
+    {"case_id": "missing-evidence", "decision_variant": "complete_low", "candidate": "missing_observation", "expected_status": "rejected", "expected_error_code": "observation_count_invalid", "checks": ["evidence"]},
+    {"case_id": "observation-id-claim", "decision_variant": "complete_low", "candidate": "observation_id_claim", "expected_status": "rejected", "expected_error_code": "observation_id_invalid", "checks": []},
+    {"case_id": "signal-points-bool", "decision_variant": "complete_low", "candidate": "signal_points_bool", "expected_status": "rejected", "expected_error_code": "observation_value_invalid", "checks": ["fact"]}
   ]
 }

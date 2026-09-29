@@ -58,6 +58,8 @@ def test_unevaluable_rules_are_explicitly_insufficient_evidence(index) -> None:
         ("extra_summary", "draft_schema_invalid"),
         ("disposition_conflict", "draft_status_invalid"),
         ("missing_observation", "observation_count_invalid"),
+        ("observation_id_claim", "observation_id_invalid"),
+        ("signal_points_bool", "observation_value_invalid"),
     ],
 )
 def test_malicious_candidates_are_rejected(index, snapshot, mutation, code) -> None:
@@ -109,8 +111,11 @@ def test_policy_version_or_digest_drift_fails_context(index, snapshot) -> None:
 
 def test_evaluation_metrics_are_computed_from_reviewed_cases() -> None:
     report = evaluate()
-    assert report["n_cases"] == 9
+    assert report["n_cases"] == 11
+    assert report["format_cases"] == 11
+    assert report["fact_cases"] == 7
+    assert report["evidence_cases"] == 6
     assert report["format_success_rate"] == 1.0
     assert report["fact_consistency_rate"] == 1.0
     assert report["evidence_completeness_rate"] == 1.0
-    assert report["observed_status_counts"] == {"verified": 2, "insufficient_evidence": 1, "rejected": 6}
+    assert report["observed_status_counts"] == {"verified": 2, "insufficient_evidence": 1, "rejected": 8}

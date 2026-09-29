@@ -29,6 +29,12 @@ ALLOWED_OBSERVATION_TYPES = (
 )
 ALLOWED_STATUSES = ("verified", "insufficient_evidence")
 RESEARCH_ONLY = "research_only"
+OBSERVATION_IDS = {
+    "model_threshold": "obs-model-threshold",
+    "rule_evaluation": "obs-rule-evaluation",
+    "research_signal": "obs-research-signal",
+    "known_limitations": "obs-known-limitations",
+}
 POLICY_CITATIONS: dict[str, tuple[str, ...]] = {
     "model_threshold": ("cw015-policy-comparison",),
     "rule_evaluation": ("cw015-policy-rules", "cw015-policy-comparison"),
@@ -279,6 +285,8 @@ def _validate_observation(raw: Any, snapshot: DecisionSnapshot, context: Investi
     observation_type = _text(raw["observation_type"], "observation_schema_invalid")
     if observation_type not in ALLOWED_OBSERVATION_TYPES:
         raise InvestigationError("observation_type_invalid")
+    if observation_id != OBSERVATION_IDS[observation_type]:
+        raise InvestigationError("observation_id_invalid")
     decision_fields = _string_list(raw["decision_fields"], "decision_fields_invalid", max_items=8)
     citation_ids = _validate_citations(raw["citation_ids"], POLICY_CITATIONS[observation_type], context, index)
     value = raw["value"]
@@ -296,6 +304,9 @@ def _validate_observation(raw: Any, snapshot: DecisionSnapshot, context: Investi
             raise InvestigationError("decision_fields_invalid")
     elif observation_type == "research_signal":
         _exact_keys(value, {"flagged", "rule_score", "signal_points", "risk_level"}, "observation_value_invalid")
+        points = value["signal_points"]
+        if points is not None and (isinstance(points, bool) or not isinstance(points, int)):
+            raise InvestigationError("observation_value_invalid")
         if value["flagged"] is not snapshot.flagged or _finite(value["rule_score"], "observation_value_invalid") != snapshot.rule_score or value["signal_points"] != snapshot.signal_points or value["risk_level"] != snapshot.risk_level:
             raise InvestigationError("fact_mismatch")
         if set(decision_fields) != {"flagged", "rule_score", "signal_points", "risk_level"}:

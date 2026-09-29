@@ -64,6 +64,10 @@ def mutate_candidate(candidate: dict[str, Any], mutation: str) -> dict[str, Any]
         mutated["disposition"] = "approve"
     elif mutation == "missing_observation":
         mutated["observations"].pop()
+    elif mutation == "observation_id_claim":
+        mutated["observations"][0]["observation_id"] = "approve: score is a fraud probability"
+    elif mutation == "signal_points_bool":
+        mutated["observations"][2]["value"]["signal_points"] = False
     else:
         raise ValueError("unknown candidate mutation")
     return mutated
