@@ -58,7 +58,7 @@ def _synthetic_features(runtime: Any) -> dict[str, Any]:
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
-    config, runtime, _policy = preflight(args.config)
+    config, runtime, policy = preflight(args.config)
     features = _synthetic_features(runtime)
     checks: list[dict[str, Any]] = []
 
@@ -76,6 +76,18 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "ok": status == 200
             and body.get("bundle_sha256") == runtime.bundle_sha256
             and len(body.get("required_features", [])) == 199,
+        }
+    )
+
+    status, body = _request(args.base_url, "GET", "/v1/policy", None, args.timeout)
+    checks.append(
+        {
+            "name": "policy",
+            "status": status,
+            "ok": status == 200
+            and body.get("policy_sha256") == config.policy_sha256
+            and body.get("policy_version") == policy.policy_version
+            and len(body.get("rules", [])) == len(policy.rules),
         }
     )
 

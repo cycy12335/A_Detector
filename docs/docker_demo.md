@@ -8,6 +8,12 @@
 需要 Docker Desktop（包含 Docker Compose v2）和本地已授权的 CW-004 bundle。bundle 不复制进镜像，
 而是以只读 bind mount 提供；镜像构建不会偷偷下载或替换模型。
 
+安装 Docker Desktop 后，先在 PowerShell 运行 `docker --version`、`docker compose version` 和
+`docker info`，确认 CLI、Compose 与引擎可用。如果 Desktop 已安装但 `docker` 不在 `PATH`，
+可直接调用安装目录中的 `docker.exe`。按用户安装时常见路径为
+`$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin\docker.exe`；将下文命令中的 `docker`
+替换为 `& "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin\docker.exe"` 即可。
+
 新克隆环境如果没有 `artifacts/models/cw004/lightgbm_bundle.joblib`，先从已授权的私有 Release 获取
 CW-013 交付包并运行：
 
@@ -28,13 +34,13 @@ python scripts/verify_demo.py
 docker compose -f compose.demo.yaml down --remove-orphans
 ```
 
-验证脚本依次检查 `/health/live`、`/health/ready`、`/v1/model`、合成 `/v1/score` 和错误特征契约。
+验证脚本依次检查 `/health/live`、`/health/ready`、`/v1/model`、`/v1/policy`、合成 `/v1/score` 和错误特征契约。
 它只输出安全摘要，不保存请求特征值、响应载荷或数据库内容。演示启动失败时，入口会在监听端口前
 校验 bundle/policy 的冻结摘要和运行时契约，并输出稳定的 `demo_preflight_failed:<code>`。
 
 Compose 将容器端口映射到宿主机 `127.0.0.1:8000`，容器使用非 root 用户、只读根文件系统、只读
 bundle 挂载、无新增 Linux capabilities 和 `no-new-privileges`。配置里不声明 storage，因此不会创建
-默认 SQLite；容器销毁后没有业务数据需要清理。
+默认 SQLite；容器日志使用 `local` 驱动，最多保留 3 个各 10 MB 的轮转文件。容器销毁后没有业务数据需要清理。
 
 ## 失败路径与限制
 
