@@ -1,0 +1,15 @@
+{
+  "schema_version": "cw017_cases_v1",
+  "dataset_version": "cw017-offline-reviewed-v1",
+  "cases": [
+    {"name": "verified", "decision_variant": "complete_low", "kind": "candidate", "mutation": null, "expected_status": "verified", "checks": ["format", "fact", "evidence"]},
+    {"name": "insufficient_evidence", "decision_variant": "unevaluable", "kind": "candidate", "mutation": null, "expected_status": "insufficient_evidence", "checks": ["format", "fact", "evidence"]},
+    {"name": "extra_field", "decision_variant": "complete_low", "kind": "candidate", "mutation": "extra_summary", "expected_status": "rejected", "checks": ["format"]},
+    {"name": "fact_conflict", "decision_variant": "complete_low", "kind": "candidate", "mutation": "flagged_conflict", "expected_status": "rejected", "checks": ["format", "fact"]},
+    {"name": "forged_citation", "decision_variant": "complete_low", "kind": "candidate", "mutation": "citation_unknown", "expected_status": "rejected", "checks": ["format", "evidence"]},
+    {"name": "timeout", "decision_variant": "complete_low", "kind": "timeout", "mutation": null, "expected_status": "degraded", "checks": ["fault"]},
+    {"name": "missing_credentials", "decision_variant": "complete_low", "kind": "missing_credentials", "mutation": null, "expected_status": "degraded", "checks": ["fault"]},
+    {"name": "response_schema", "decision_variant": "complete_low", "kind": "malformed_response", "mutation": null, "expected_status": "degraded", "checks": ["fault"]},
+    {"name": "cost_limit", "decision_variant": "complete_low", "kind": "cost_limit", "mutation": null, "expected_status": "degraded", "checks": ["fault"]}
+  ]
+}

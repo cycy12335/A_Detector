@@ -22,7 +22,7 @@
 
 - 项目阶段：P4 RAG 辅助调查
 - 当前任务：`CW-017` / `TASK-20260929-003`
-- 状态：`CW-017` 已开包（`new`）；`CW-016` 已独立验收通过
+- 状态：`CW-017` 已完成 DeepSeek 真实合成端到端验证，等待独立验收；`CW-016` 已独立验收通过
 - 规范入口：`.handoff/latest.md` 与 `.handoff/tasks/TASK-20260929-003/`
 
 ## 这是什么
@@ -1547,6 +1547,26 @@ python -m pytest tests/unit/test_cw016_investigation.py -q
 评测使用人工审查的合成决策与恶意候选，不读取真实交易数据、默认数据库，不调用 LLM 或外部服务。
 格式、事实一致性和证据完整率由脚本从实际校验结果计算。详细 schema、失败行为和限制见
 [docs/investigation_draft.md](docs/investigation_draft.md)。
+
+## P4 / 受控生成边界（CW-017）
+
+CW-017 增加提供方中立的结构化请求/响应契约和受控编排器：请求只包含 CW-016
+`DecisionSnapshot` 的显式白名单派生字段，以及 CW-015 已审查的政策片段；工具白名单为空，
+请求/响应均有 schema 版本和大小上限。任何响应都作为不可信 `cw016_draft_v1` 候选，必须重新
+经过 CW-016 `validate_candidate`；失败只会降级为 `degraded`、`rejected` 或
+`insufficient_evidence`，不会生成可信处置结论。
+
+```powershell
+python scripts/evaluate_generation.py
+python -m pytest tests/unit/test_cw017_generation.py -q
+```
+
+离线验证覆盖超时有限重试、调用/费用上限、凭据缺失、格式错误、额外字段、事实冲突和伪造引用。
+负责人已决定使用 DeepSeek API 的 `deepseek-flash`（展示名 DeepSeek-V4.1-Flash），凭据只从
+`DEEPSEEK_API_KEY` 读取；适配器通过 Responses API 的 JSON Schema 输出完成一次合成端到端调用，
+结果经 CW-016 校验为 `verified`。本次预算上限按人民币 0.50 元保守换算为 USD 0.07，实际费用
+USD 0.0011514；工具白名单为空，最多 2 次调用、最多 1 次重试、60 秒窗口最多 2 次调用。
+配置、日志脱敏、真实调用与降级边界见 [docs/generation_adapter.md](docs/generation_adapter.md)。
 
 ## 产物位置
 
