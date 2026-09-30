@@ -1,8 +1,8 @@
 """CW-017 的受控生成边界。
 
-本模块只提供提供方中立的请求/响应契约、离线假传输和安全编排器。真实提供方尚未
-由项目负责人选定，因此这里不会导入 SDK、读取凭据或发出网络请求。任何传输层返回
-的候选都必须再次经过 CW-016 的独立校验器。
+本模块提供有界请求/响应契约、离线假传输、DeepSeek 传输和安全编排器。
+只有显式使用真实传输时才读取进程凭据并发出网络请求。任何传输层返回的候选都必须
+再次经过 CW-016 的独立校验器。
 """
 
 from __future__ import annotations
@@ -25,11 +25,12 @@ from ai_detector.investigation.draft import (
     OBSERVATION_IDS,
     DecisionSnapshot,
     DraftValidation,
+    InvestigationError,
     InvestigationContext,
     build_context,
     validate_candidate,
 )
-from ai_detector.retrieval import RetrievalIndex, build_index
+from ai_detector.retrieval import RetrievalError, RetrievalIndex, SourceManifestError, build_index
 
 REQUEST_SCHEMA_VERSION = "cw017_generation_request_v1"
 RESPONSE_SCHEMA_VERSION = "cw017_generation_response_v1"
@@ -567,12 +568,16 @@ class ControlledGenerator:
         context: InvestigationContext | None = None,
         index: RetrievalIndex | None = None,
     ) -> GenerationOutcome:
-        evidence_index = index or build_index()
         try:
+            evidence_index = index or build_index()
             bound_context = context or build_context(snapshot, evidence_index)
             request = build_request(snapshot, bound_context, self.config, evidence_index)
         except GenerationError as error:
             return self._degraded(error.code, 0, 0)
+        except InvestigationError as error:
+            return self._degraded(error.code, 0, 0)
+        except (RetrievalError, SourceManifestError, OSError):
+            return self._degraded("evidence_unavailable", 0, 0)
         if self.config.mode == "real" and not os.getenv(self.config.credential_env or ""):
             return self._degraded("credentials_missing", request.size_chars, 0)
         attempts = 0

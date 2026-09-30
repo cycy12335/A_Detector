@@ -72,6 +72,9 @@ def evaluate() -> dict[str, Any]:
     count = len(outcomes)
     fact_cases = sum("fact" in checks for _actual, _expected, _correct, checks in outcomes)
     evidence_cases = sum("evidence" in checks for _actual, _expected, _correct, checks in outcomes)
+    format_correct = sum(correct for _actual, _expected, correct, _checks in outcomes)
+    fact_correct = sum(correct for _actual, _expected, correct, checks in outcomes if "fact" in checks)
+    evidence_correct = sum(correct for _actual, _expected, correct, checks in outcomes if "evidence" in checks)
     return {
         "schema_version": "cw017_evaluation_v1",
         "dataset_version": dataset["dataset_version"],
@@ -80,12 +83,16 @@ def evaluate() -> dict[str, Any]:
         "n_cases": count,
         "expected_status_counts": {status: sum(expected == status for _actual, expected, _correct, _checks in outcomes) for status in ("verified", "insufficient_evidence", "rejected", "degraded")},
         "observed_status_counts": {status: sum(actual == status for actual, _expected, _correct, _checks in outcomes) for status in ("verified", "insufficient_evidence", "rejected", "degraded")},
+        "metric_semantics": "expected_status_classification_on_offline_fault_cases",
         "format_cases": count,
-        "format_success_rate": sum(correct for _actual, _expected, correct, _checks in outcomes) / count if count else 0.0,
+        "format_success_count": format_correct,
+        "format_success_rate": format_correct / count if count else 0.0,
         "fact_cases": fact_cases,
-        "fact_consistency_rate": sum(correct for _actual, _expected, correct, checks in outcomes if "fact" in checks) / fact_cases if fact_cases else 0.0,
+        "fact_consistency_count": fact_correct,
+        "fact_consistency_rate": fact_correct / fact_cases if fact_cases else 0.0,
         "evidence_cases": evidence_cases,
-        "evidence_completeness_rate": sum(correct for _actual, _expected, correct, checks in outcomes if "evidence" in checks) / evidence_cases if evidence_cases else 0.0,
+        "evidence_completeness_count": evidence_correct,
+        "evidence_completeness_rate": evidence_correct / evidence_cases if evidence_cases else 0.0,
         "policy_version": policy.source_version,
     }
 

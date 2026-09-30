@@ -41,6 +41,8 @@ def run(output: Path | None = None) -> dict[str, object]:
         mode="real",
         credential_env="DEEPSEEK_API_KEY",
         max_cost_usd=0.07,
+        # Reserve above the maximum cost of this bounded input and 2,048 output tokens.
+        estimated_cost_per_call_usd=0.035,
         max_retries=1,
         max_calls=2,
         rate_limit_calls=2,

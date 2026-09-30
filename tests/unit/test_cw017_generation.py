@@ -103,6 +103,30 @@ def test_repeated_timeout_degrades_without_candidate(index, snapshot, context) -
     assert outcome.draft is None
 
 
+def test_policy_digest_mismatch_degrades_before_transport(index) -> None:
+    policy = next(item for item in index.chunks if item.authority == "policy")
+    snapshot = synthetic_decision("complete_low", policy_sha256="0" * 64, policy_version=policy.source_version)
+    transport = OfflineFakeTransport({})
+    outcome = ControlledGenerator(GenerationConfig(), transport).generate(snapshot, index=index)
+    assert outcome.status == "degraded"
+    assert outcome.error_codes == ("policy_digest_mismatch",)
+    assert outcome.draft is None
+    assert transport.calls == 0
+
+
+def test_missing_evidence_degrades_before_transport(monkeypatch, snapshot) -> None:
+    def missing_index():
+        raise FileNotFoundError("private path")
+
+    monkeypatch.setattr("ai_detector.investigation.generation.build_index", missing_index)
+    transport = OfflineFakeTransport({})
+    outcome = ControlledGenerator(GenerationConfig(), transport).generate(snapshot)
+    assert outcome.status == "degraded"
+    assert outcome.error_codes == ("evidence_unavailable",)
+    assert outcome.draft is None
+    assert transport.calls == 0
+
+
 def test_real_mode_requires_credential_without_calling_transport(index, snapshot, context) -> None:
     transport = _transport(snapshot, context)
     config = GenerationConfig(mode="real", provider_name="selected-provider", model_name="selected-model", credential_env="CW017_TEST_KEY", max_cost_usd=1.0)
