@@ -22,7 +22,7 @@
 
 - 项目阶段：P5 作品集交付
 - 当前任务：`CW-019` / `TASK-20260930-002`
-- 状态：`CW-019` 已开包（`new`）；`CW-018` 已独立复验通过
+- 状态：`CW-019` 文档已实现，等待独立验收；`CW-018` 已独立复验通过
 - 规范入口：`.handoff/latest.md` 与 `.handoff/tasks/TASK-20260930-002/`
 
 ## 这是什么
@@ -1585,6 +1585,18 @@ docker compose -f compose.demo.yaml down --remove-orphans
 
 验证脚本使用合成常量特征检查健康、模型与政策元数据、只读评分和错误特征契约。缺失或篡改 bundle 时入口
 失败关闭；没有 Docker 的机器只能运行契约测试，不能把静态配置当作容器端到端证据。
+
+## P5 / 系统架构、数据流与关键取舍（CW-019）
+
+CW-019 将离线数据/模型、默认回环服务、审查证据与可选 DeepSeek、Docker 演示和 GitHub Actions
+整理成可追溯架构图。文档明确 199 特征契约、SHA-256 失败关闭、最小派生存储、调查候选独立校验、
+DeepSeek 显式调用边界，以及 Docker 本地证据不等同于托管 CI。
+
+详见 [docs/architecture.md](docs/architecture.md)，可先运行文档结构检查：
+
+```powershell
+python scripts/validate_architecture_docs.py
+```
 
 ## 产物位置
 
