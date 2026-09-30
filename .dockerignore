@@ -1,0 +1,14 @@
+# CW-018: keep ignored models, data, reports, credentials and local state out of build context.
+.git
+.venv
+artifacts
+data
+.handoff
+WORK_LOG.md
+CLAUDE.md
+.pytest_cache
+.ruff_cache
+*.env
+*.key
+*.pem
+secrets.*

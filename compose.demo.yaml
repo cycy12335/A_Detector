@@ -1,0 +1,37 @@
+# CW-018: local-only, read-only Compose demo.
+services:
+  risk-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile.demo
+    image: ai-detector-risk-demo:local
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - type: bind
+        source: ./artifacts/models/cw004
+        target: /app/artifacts/models/cw004
+        read_only: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    user: "10001:10001"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s

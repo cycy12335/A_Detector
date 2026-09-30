@@ -1,0 +1,30 @@
+# CW-018 / Compose 演示配置
+#
+# 这是无存储、无 LLM、只读的本地演示配置。bundle 由 Compose 的只读 bind mount
+# 提供；启动前会再次由 scripts/run_demo.py 通过既有运行时校验 SHA-256 和契约。
+
+service:
+  name: ai-detector-risk-demo
+  api_version: v1
+  model_version: cw004-lightgbm-challenger-v1
+  host: 127.0.0.1
+  port: 8000
+  batch_limit: 100
+  request_id_header: X-Request-ID
+  score_semantics: uncalibrated_model_score
+  threshold_policy: validation_f1
+  expected_source_features: 199
+
+bundle:
+  path: artifacts/models/cw004/lightgbm_bundle.joblib
+  sha256: f02bb50e61c5f70c85448430c8bb653bd6e347f400220771500ee84a70135a1c
+  expected_schema_version: cw004_bundle_v1
+
+policy:
+  path: configs/risk_policy.yaml
+  sha256: 7ed07f0b784715c01b444035bb34ea5166d1b376ff07e10428561d898d6824f0
+  expected_schema_version: cw006_policy_v1
+
+limits:
+  max_request_id_length: 64
+  request_id_pattern: "^[A-Za-z0-9._:-]{1,64}$"

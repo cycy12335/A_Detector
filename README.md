@@ -22,7 +22,7 @@
 
 - 项目阶段：P5 作品集交付
 - 当前任务：`CW-018` / `TASK-20260930-001`
-- 状态：`CW-018` 已开包（`new`）；`CW-017` 已独立验收通过
+- 状态：`CW-018` 已完成 Compose 演示实现和本机非容器链路验证，等待 Docker 实测与独立验收；`CW-017` 已独立验收通过
 - 规范入口：`.handoff/latest.md` 与 `.handoff/tasks/TASK-20260930-001/`
 
 ## 这是什么
@@ -1567,6 +1567,24 @@ python -m pytest tests/unit/test_cw017_generation.py -q
 结果经 CW-016 校验为 `verified`。本次预算上限按人民币 0.50 元保守换算为 USD 0.07，实际费用
 USD 0.0011514；工具白名单为空，最多 2 次调用、最多 1 次重试、60 秒窗口最多 2 次调用。
 配置、日志脱敏、真实调用与降级边界见 [docs/generation_adapter.md](docs/generation_adapter.md)。
+
+## P5 / Docker Compose 本地演示（CW-018）
+
+CW-018 提供本地只读容器演示：镜像不包含被忽略的模型 bundle，启动时通过只读 bind mount 提供，
+并在监听端口前校验 bundle/policy 的冻结 SHA-256 和运行时契约。容器不启用 DeepSeek、默认 SQLite、
+持久化卷或真实交易数据，使用非 root、只读根文件系统和 `127.0.0.1:8000` 宿主端口。
+
+需要 Docker Desktop 和本地已授权的 CW-004 bundle。新克隆若 bundle 不存在，先按
+[docs/docker_demo.md](docs/docker_demo.md) 的 CW-013 交付步骤导入，再运行：
+
+```powershell
+docker compose -f compose.demo.yaml up --build -d
+python scripts/verify_demo.py
+docker compose -f compose.demo.yaml down --remove-orphans
+```
+
+验证脚本使用合成常量特征检查健康、模型元数据、只读评分和错误特征契约。缺失或篡改 bundle 时入口
+失败关闭；本机没有 Docker 时只能运行契约测试，不能把静态配置当作容器端到端证据。
 
 ## 产物位置
 

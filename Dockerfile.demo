@@ -1,0 +1,32 @@
+# CW-018: reproducible local portfolio demo image.
+FROM python:3.14-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src
+
+WORKDIR /app
+
+# The application user is deliberately non-root. The demo has no writable data volume.
+RUN groupadd --system --gid 10001 appdemo \
+    && useradd --system --uid 10001 --gid 10001 --create-home --home-dir /nonexistent appdemo
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml README.md ./
+COPY constraints/cw014-ci.txt constraints/cw014-ci.txt
+COPY src ./src
+COPY configs/demo_service.yaml configs/demo_service.yaml
+COPY configs/risk_policy.yaml configs/risk_policy.yaml
+COPY scripts/run_demo.py scripts/run_demo.py
+
+# Runtime dependencies are installed from binary wheels; the ignored model bundle is
+# intentionally not copied into the image.
+RUN python -m pip install --no-cache-dir --upgrade pip \
+    && python -m pip install --no-cache-dir --only-binary=:all: \
+        -c constraints/cw014-ci.txt ".[service,tree]"
+
+USER 10001:10001
+ENTRYPOINT ["python", "scripts/run_demo.py", "--config", "configs/demo_service.yaml"]
