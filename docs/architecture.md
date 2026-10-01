@@ -1,5 +1,7 @@
 # CW-019 系统架构、数据流与关键取舍
 
+[返回项目总览 README](../README.md)
+
 ## 1. 交付边界
 
 本项目是面向作品集的研究原型，不是生产交易风控系统。实际系统由四类边界组成：
@@ -33,9 +35,9 @@ flowchart LR
   bundle --> runtime[运行时 hash 校验后加载]
   policy[configs/risk_policy.yaml] --> runtime
   runtime --> api[scripts/run_api.py / FastAPI]
-  api --> score[/v1/score 与 /v1/score/batch]
-  api --> risk[/v1/risk/evaluate]
-  api --> decision[/v1/decisions/*]
+  api --> score["/v1/score 与 /v1/score/batch"]
+  api --> risk["/v1/risk/evaluate"]
+  api --> decision["/v1/decisions/*"]
   decision --> sqlite[派生结果 SQLite]
   sources[CW-015 reviewed fragments] --> draft[CW-016 候选与独立校验]
   draft --> optional[CW-017 显式 DeepSeek API]
@@ -51,9 +53,11 @@ flowchart TD
   csv[用户本地 IEEE-CIS 原始 CSV] --> fp[流式 SHA-256 与 schema 审计]
   fp --> temporal[按 TransactionDT 时间值切分]
   temporal --> fit[仅 train 拟合列角色/预处理]
-  fit --> threshold[仅 validation 冻结 F1 阈值]
-  threshold --> train_model[训练 LightGBM challenger]
-  train_model --> test_once[test 一次性评估]
+  fit --> train_model[训练 LightGBM challenger + validation 早停]
+  train_model --> validation_scores[生成 validation 分数]
+  validation_scores --> threshold[仅 validation 冻结 F1 阈值]
+  threshold --> deterministic[候选 A/B 确定性比较]
+  deterministic --> test_once[test 一次性评估]
   test_once --> artifact[冻结 joblib bundle]
   artifact --> local[本地 artifacts/models/cw004]
   artifact --> private_release[私有 Release 资产]
@@ -81,13 +85,14 @@ flowchart LR
   persist -->|否| readonly[只读返回]
   persist -->|是| derived[最小派生记录 + SQLite 事务]
   derived --> snapshot[CW-016 DecisionSnapshot]
-  evidence[CW-015 审查片段] --> snapshot
-  snapshot --> validator[独立事实/引用校验]
-  validator --> candidate{需要显式生成?}
+  evidence[CW-015 审查片段] --> context[CW-016 有界上下文]
+  snapshot --> context
+  context --> candidate{需要显式生成?}
   candidate -->|否| outcome[verified / insufficient_evidence]
   candidate -->|是| deepseek[CW-017 DeepSeek Responses API]
-  deepseek --> validator
-  validator -.-> outcome2[rejected / degraded]
+  deepseek --> external_candidate[不可信外部候选]
+  external_candidate --> validator[CW-016 独立事实/引用校验]
+  validator --> outcome2[verified / insufficient_evidence / rejected]
 ```
 
 服务请求不会自动进入调查生成链路。只有派生决策快照和已审查政策片段能进入 CW-016；原始特征、交易行、
@@ -183,7 +188,7 @@ Docker 入口在监听端口前检查 bundle/policy；镜像不 COPY 模型，�
 - **选择**：CW-015 仅从 `configs/retrieval_sources.json` 指定的三个来源和审查片段构造 evidence，
   并绑定来源版本与 SHA-256。
 - **理由**：调查候选必须能回指政策原文边界；完整 README、原始数据和任意外部网页不进入默认上下文。
-- **证据**：`docs/retrieval.md`、`scripts/build_retrieval_index.py`、CW-015 38 项专项测试。
+- **证据**：`docs/retrieval.md`、`scripts/build_retrieval_index.py`、CW-015 检索专项；当前 CW-015/016/017 联合专项为 39 passed。
 - **代价**：知识覆盖面小，新增规则必须先登记、审查和更新摘要。
 - **限制**：检索命中不证明规则正确，也不提供开放世界调查能力；unsupported query 需要安全降级。
 
@@ -228,6 +233,9 @@ docker compose -f compose.demo.yaml down --remove-orphans
 本次 CW-019 文档校验由 `python scripts/validate_architecture_docs.py` 执行。CW-018 已有本地 Docker
 证据；最新托管质量门禁验证静态检查、12/12 回归和全量 pytest，但工作流没有 Docker job。报告目录
 `artifacts/reports/cw005_service` 至 `cw018_docker_acceptance` 被忽略，只保存安全摘要，不作为代码输入。
+图形复验命令为 `npx -y @mermaid-js/mermaid-cli@12.0.0 --version`、`npx -y puppeteer@24.31.0 browsers install chrome-headless-shell`，
+以及 `python scripts/render_architecture.py --npx npx.cmd --package @mermaid-js/mermaid-cli@12.0.0`；该命令会提取四个
+Mermaid 源文件并输出 PNG 到被忽略的 `artifacts/reports/cw019_architecture_render`。
 
 ## 10. 已知限制与后续边界
 

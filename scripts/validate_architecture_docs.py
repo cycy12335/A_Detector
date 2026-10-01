@@ -23,6 +23,7 @@ REQUIRED_TEXT = (
     "compose.demo.yaml",
     "GitHub Actions",
     "DEEPSEEK_API_KEY",
+    "[返回项目总览 README](../README.md)",
     "199",
     "12/12",
     "f02bb50e61c5f70c85448430c8bb653bd6e347f400220771500ee84a70135a1c",
@@ -52,6 +53,14 @@ def validate() -> dict[str, object]:
             errors.append(f"diagram_{index}_not_flowchart")
         if not any("-->" in line or "-.->" in line for line in lines):
             errors.append(f"diagram_{index}_has_no_directional_edge")
+    order_checks = (
+        ("fit --> train_model", "train_model --> validation_scores", "validation_scores --> threshold"),
+        ("deepseek[CW-017 DeepSeek Responses API]", "external_candidate[不可信外部候选]", "external_candidate --> validator"),
+    )
+    for index, sequence in enumerate(order_checks, start=1):
+        positions = [text.find(marker) for marker in sequence]
+        if any(position < 0 for position in positions) or positions != sorted(positions):
+            errors.append(f"diagram_order_{index}_invalid")
     if re.search(r"sk-[A-Za-z0-9]{12,}", text):
         errors.append("possible_api_key_in_document")
     readme_text = README.read_text(encoding="utf-8")
