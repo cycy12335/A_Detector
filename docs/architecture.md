@@ -24,11 +24,14 @@
 校验/门禁关系。
 
 ```mermaid
-flowchart LR
+flowchart TD
   raw[IEEE-CIS 匿名 CSV] --> audit[CW-002 契约/连接/时间审计]
   audit --> split[时间值切分 60/20/20]
-  split --> train[CW-003 train-only 特征与阈值]
-  train --> bundle[CW-004 LightGBM bundle]
+  split --> train[CW-003 train-only 特征与预处理]
+  train --> model_train[CW-004 LightGBM + validation 早停]
+  model_train --> validation_scores[validation 分数]
+  validation_scores --> threshold[validation F1 阈值冻结]
+  threshold --> bundle[CW-004 LightGBM bundle]
   bundle --> release[私有 Release / CW-014 交付]
   release --> fetch[ci_fetch_inputs.py]
   fetch --> gate[run_project_gate.py]
@@ -65,7 +68,7 @@ flowchart TD
   local -.-> service[默认服务只读加载]
 ```
 
-这条流的关键事实是“训练边界先于模型”：验证集只用于冻结阈值，测试集只评估一次，bundle 不携带原始
+这条流的关键事实是“训练边界先于模型”：validation 同时用于 LightGBM 早停和 F1 阈值冻结，test 只评估一次，bundle 不携带原始
 CSV。`configs/quality_gate.yaml` 冻结服务配置、政策、12 个合成回归 case 和 bundle 的摘要；服务配置摘要为
 `4dd211557214cee85abf1f427f72bfcec3510f6a4d01a928becb141fffb1c865`，政策摘要为
 `7ed07f0b784715c01b444035bb34ea5166d1b376ff07e10428561d898d6824f0`，bundle 摘要为
@@ -75,7 +78,7 @@ CSV。`configs/quality_gate.yaml` 冻结服务配置、政策、12 个合成回�
 ## 4. 数据流二：请求时评分、政策、调查候选
 
 ```mermaid
-flowchart LR
+flowchart TD
   client[合成或匿名请求] --> contract[199 源特征严格契约]
   contract --> verify[运行时 bundle SHA-256 校验]
   verify --> model[LightGBM 未校准分数]
@@ -87,9 +90,11 @@ flowchart LR
   derived --> snapshot[CW-016 DecisionSnapshot]
   evidence[CW-015 审查片段] --> context[CW-016 有界上下文]
   snapshot --> context
-  context --> candidate{需要显式生成?}
-  candidate -->|否| outcome[verified / insufficient_evidence]
-  candidate -->|是| deepseek[CW-017 DeepSeek Responses API]
+  context --> candidate{选择生成路径}
+  candidate -->|离线| offline_generate[CW-016 generate_candidate]
+  offline_generate --> offline_validator[CW-016 validate_candidate]
+  offline_validator --> outcome[verified / insufficient_evidence / rejected]
+  candidate -->|显式外部| deepseek[CW-017 DeepSeek Responses API]
   deepseek --> external_candidate[不可信外部候选]
   external_candidate --> validator[CW-016 独立事实/引用校验]
   validator --> outcome2[verified / insufficient_evidence / rejected]
@@ -194,7 +199,7 @@ Docker 入口在监听端口前检查 bundle/policy；镜像不 COPY 模型，�
 
 ### 8.6 独立校验与显式 DeepSeek
 
-- **选择**：CW-016 先独立校验结构化候选；CW-017 只在显式脚本中调用 `deepseek-flash`（展示名
+- **选择**：离线 `generate_candidate` 和外部 DeepSeek 候选都统一交给 CW-016 `validate_candidate` 独立校验；CW-017 只在显式脚本中调用 `deepseek-flash`（展示名
   DeepSeek-V4.1-Flash），`tools=[]`，每次调用有字符、调用、重试和费用上限。
 - **理由**：生成器是不可信输入源；模型可以辅助组织证据，但不能绕过事实、引用和版本校验。
 - **证据**：`docs/generation_adapter.md`、`scripts/run_deepseek_generation.py`、CW-016/017 专项与最近

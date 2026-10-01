@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import struct
 import subprocess
 from pathlib import Path
 
@@ -15,13 +16,20 @@ DEFAULT_OUTPUT = ROOT / "artifacts" / "reports" / "cw019_architecture_render"
 MERMAID_FENCE = re.compile(r"\x60\x60\x60mermaid\r?\n(.*?)\r?\n\x60\x60\x60", re.DOTALL)
 
 
+def png_dimensions(path: Path) -> tuple[int, int]:
+    header = path.read_bytes()[:24]
+    if header[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError("rendered_output_not_png")
+    return struct.unpack(">II", header[16:24])
+
+
 def render(document: Path, output_dir: Path, npx: str, package: str) -> dict[str, object]:
     text = document.read_text(encoding="utf-8")
     blocks = MERMAID_FENCE.findall(text)
     if not blocks:
         raise ValueError("no_mermaid_diagrams")
     output_dir.mkdir(parents=True, exist_ok=True)
-    rendered: list[str] = []
+    rendered: list[dict[str, object]] = []
     for index, block in enumerate(blocks, start=1):
         source = output_dir / f"diagram-{index:02d}.mmd"
         image = output_dir / f"diagram-{index:02d}.png"
@@ -38,7 +46,8 @@ def render(document: Path, output_dir: Path, npx: str, package: str) -> dict[str
         )
         if completed.returncode != 0 or not image.is_file():
             raise RuntimeError(f"diagram_{index}_render_failed")
-        rendered.append(image.as_posix())
+        width, height = png_dimensions(image)
+        rendered.append({"path": image.as_posix(), "width": width, "height": height})
     return {"document": document.as_posix(), "diagram_count": len(blocks), "rendered": rendered}
 
 

@@ -24,6 +24,9 @@ REQUIRED_TEXT = (
     "GitHub Actions",
     "DEEPSEEK_API_KEY",
     "[返回项目总览 README](../README.md)",
+    "validation 同时用于 LightGBM 早停和 F1 阈值冻结",
+    "offline_generate[CW-016 generate_candidate]",
+    "offline_validator[CW-016 validate_candidate]",
     "199",
     "12/12",
     "f02bb50e61c5f70c85448430c8bb653bd6e347f400220771500ee84a70135a1c",
@@ -54,15 +57,32 @@ def validate() -> dict[str, object]:
         if not any("-->" in line or "-.->" in line for line in lines):
             errors.append(f"diagram_{index}_has_no_directional_edge")
     order_checks = (
-        ("fit --> train_model", "train_model --> validation_scores", "validation_scores --> threshold"),
-        ("deepseek[CW-017 DeepSeek Responses API]", "external_candidate[不可信外部候选]", "external_candidate --> validator"),
+        (
+            "## 3. 数据流一：离线数据到可交付模型",
+            ("fit --> train_model", "train_model --> validation_scores", "validation_scores --> threshold"),
+        ),
+        (
+            "## 4. 数据流二：请求时评分、政策、调查候选",
+            ("context --> candidate", "candidate -->|离线| offline_generate", "offline_generate --> offline_validator"),
+        ),
+        (
+            "## 4. 数据流二：请求时评分、政策、调查候选",
+            (
+                "deepseek[CW-017 DeepSeek Responses API]",
+                "external_candidate[不可信外部候选]",
+                "external_candidate --> validator",
+            ),
+        ),
     )
-    for index, sequence in enumerate(order_checks, start=1):
-        positions = [text.find(marker) for marker in sequence]
-        if any(position < 0 for position in positions) or positions != sorted(positions):
+    for index, (section, sequence) in enumerate(order_checks, start=1):
+        section_start = text.find(section)
+        positions = [text.find(marker, section_start) for marker in sequence]
+        if section_start < 0 or any(position < 0 for position in positions) or positions != sorted(positions):
             errors.append(f"diagram_order_{index}_invalid")
     if re.search(r"sk-[A-Za-z0-9]{12,}", text):
         errors.append("possible_api_key_in_document")
+    if "CW-003 train-only 特征与阈值" in text or "验证集只用于冻结阈值" in text:
+        errors.append("stale_validation_boundary_wording")
     readme_text = README.read_text(encoding="utf-8")
     if "docs/architecture.md" not in readme_text:
         errors.append("readme_architecture_link_missing")
