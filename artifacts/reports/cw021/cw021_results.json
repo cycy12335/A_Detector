@@ -8,6 +8,18 @@
     "new_test_evaluation": false,
     "deepseek_calls": false
   },
+  "shared_conditions": {
+    "dataset_family": "IEEE-CIS anonymized research data for historical model reports",
+    "source_feature_contract": 199,
+    "model_metrics_partition": "historical test after validation freeze",
+    "threshold_selection_partition": "validation only",
+    "retrieval_dataset_version": "cw015-synthetic-reviewed-v1",
+    "retrieval_fixed_inputs": [
+      "query fixture",
+      "reviewed source snapshot",
+      "deterministic index and ranking"
+    ]
+  },
   "model_comparison": [
     {
       "model_key": "rule_tail_anomaly",
