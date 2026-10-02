@@ -154,7 +154,7 @@ Docker 入口在监听端口前检查 bundle/policy；镜像不 COPY 模型，�
 | 请求 → 服务 | 严格 199 列、类型/批量/请求 ID 校验 | 422；批量错误不执行部分评分 |
 | 服务 → 存储 | 只写派生字段，UUID4/idempotency 与 SQLite 事务 | 写入失败不产生半条记录；评分路径与存储故障隔离 |
 | 证据 → 候选 | policy 版本/SHA、citation、事实和跨字段独立校验 | `rejected` 或 `insufficient_evidence`，不把候选当事实 |
-| 候选 → DeepSeek | 显式脚本、API key、调用/费用/字符/工具限制 | `degraded`，不重试认证/格式错误，不保存 payload |
+| 决策快照/已审查上下文 → DeepSeek | 显式脚本、API key、调用/费用/字符/工具限制 | `degraded`，不重试认证/格式错误，不保存 payload |
 | 主机 → Docker | bundle/policy 预检、只读挂载、非 root、loopback | 容器在监听前退出并输出稳定 `demo_preflight_failed:*` |
 | CI → 模型资产 | `contents: read`、私有 Release、字节摘要核对 | 下载或摘要错误直接退出，不静默替换模型 |
 

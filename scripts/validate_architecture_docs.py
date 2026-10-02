@@ -30,6 +30,7 @@ REQUIRED_TEXT = (
     'offline_candidate["CW-016 generate_candidate"]',
     'offline_validate["CW-016 validate_candidate"]',
     'external_validate["CW-016 独立事实/引用校验"]',
+    "决策快照/已审查上下文 → DeepSeek",
     "199",
     "12/12",
     "f02bb50e61c5f70c85448430c8bb653bd6e347f400220771500ee84a70135a1c",
@@ -97,6 +98,8 @@ def validate() -> dict[str, object]:
         errors.append("stale_validation_boundary_wording")
     if "draft --> optional" in text or "optional --> draft" in text:
         errors.append("stale_llm_candidate_cycle")
+    if "候选 → DeepSeek" in text:
+        errors.append("stale_llm_boundary_table")
     readme_text = README.read_text(encoding="utf-8")
     if "docs/architecture.md" not in readme_text:
         errors.append("readme_architecture_link_missing")
