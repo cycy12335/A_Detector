@@ -1598,6 +1598,15 @@ DeepSeek 显式调用边界，以及 Docker 本地证据不等同于托管 CI。
 python scripts/validate_architecture_docs.py
 ```
 
+## P5 / 3–5 分钟讲解脚本与交付物（CW-020）
+
+CW-020 提供可独立使用的分段讲解脚本、带逐页讲者备注的可编辑 PPTX，以及同版式 PDF。内容沿用
+CW-018 的 Docker 合成演示证据和 CW-019 的架构/数据流边界；本包不新增 Docker 实测、不调用 DeepSeek，
+并明确研究型输入、未校准分数和非生产处置限制。
+
+详见 [docs/cw020_demo_script.md](docs/cw020_demo_script.md)。生成的 PPTX/PDF 位于
+`artifacts/reports/cw020/`，可按 `.handoff/tasks/TASK-20261002-001/result.md` 中记录的 SHA-256 与逐页检查结果复核。
+
 ## 产物位置
 
 | 路径 | 内容 | 是否提交 Git |
