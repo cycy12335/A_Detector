@@ -1,0 +1,42 @@
+{
+  "schema_version": "cw021_sources_v1",
+  "inputs_config": "configs/cw021_inputs.json",
+  "frozen_sources": [
+    {
+      "path": "configs/ieee_cis_baseline.yaml",
+      "sha256": "2883c5bbf45f969fb84fe790d7b24f7a00db0ca9c7831e955a9419c0881a8368"
+    },
+    {
+      "path": "configs/ieee_cis_lightgbm.yaml",
+      "sha256": "17d629c8d27b40031385a61f924ca4d842bade1540feb46fec9c161eb144a203"
+    },
+    {
+      "path": "configs/retrieval_sources.json",
+      "sha256": "d8d96422e67b645345f7ab7d9558009e82e38116d895ddba487672c76c26e6c6"
+    },
+    {
+      "path": "tests/fixtures/cw015/retrieval_queries.json",
+      "sha256": "59a61b5b511d7e1fdaa07fc0226240ce13f7b783b92454a69290cad56b479a70"
+    },
+    {
+      "path": "artifacts/reports/cw003_ieee_cis_baselines/report.json",
+      "sha256": "75424985d9721733d0fbca833d1bd14eba03a2bddf7148222dff4b7f2c3e4763"
+    },
+    {
+      "path": "artifacts/reports/cw003_ieee_cis_baselines/threshold_curve.csv",
+      "sha256": "81693d27fa33042382b53c4dda4262286471a99386eb37f8c12adc043540470b"
+    },
+    {
+      "path": "artifacts/reports/cw004_lightgbm/report.json",
+      "sha256": "e8117c5f952759ad9bef893d403c75da12858f0c2e61b24f45cde89526ee9299"
+    },
+    {
+      "path": "artifacts/reports/cw004_lightgbm/comparison.csv",
+      "sha256": "fa9a9edc45ae9d467c8ddbcd005506e8d776451bdb24380a2a26915db6e073be"
+    },
+    {
+      "path": "artifacts/reports/cw004_lightgbm/threshold_curve.csv",
+      "sha256": "bd3a806c3526784b7e15611090d0e959375452a63bbe7a1509c8f8f2695ca59b"
+    }
+  ]
+}

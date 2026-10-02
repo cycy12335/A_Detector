@@ -1,0 +1,500 @@
+{
+  "schema_version": "cw021_results_v1",
+  "status": "passed",
+  "command": "python scripts/run_cw021_comparisons.py",
+  "scope": {
+    "raw_transactions_read": false,
+    "new_training": false,
+    "new_test_evaluation": false,
+    "deepseek_calls": false
+  },
+  "model_comparison": [
+    {
+      "model_key": "rule_tail_anomaly",
+      "precision": 0.03275027912169706,
+      "recall": 0.021653543307086614,
+      "f1": 0.02607021182047104,
+      "false_positive_rate": 0.022789449686086073,
+      "roc_auc": 0.49943195187546063,
+      "pr_auc": 0.034373263627650676,
+      "predicted_positive_rate": 0.022750364073559792,
+      "frozen_threshold": 0.5,
+      "train_seconds": 0.019,
+      "source_work_package": "CW-003",
+      "metrics_source": "cw003_report_json_read_only",
+      "source_report_sha256_declared": "75424985d9721733d0fbca833d1bd14eba03a2bddf7148222dff4b7f2c3e4763",
+      "source_report_file_sha256": "75424985d9721733d0fbca833d1bd14eba03a2bddf7148222dff4b7f2c3e4763",
+      "complexity_note": "无参数透明规则（两个训练分位数阈值），不做拟合。",
+      "cost_basis": "historical_test_after_validation_freeze",
+      "cost_unit": "research_relative_cost_not_currency",
+      "cost_scenarios": {
+        "fp_fn_1_1": {
+          "fp_cost": 1.0,
+          "fn_cost": 1.0,
+          "frozen_threshold": 0.99,
+          "test_total_cost": 4065.0,
+          "test_average_cost": 0.034417651640871065
+        },
+        "fp_fn_1_5": {
+          "fp_cost": 1.0,
+          "fn_cost": 5.0,
+          "frozen_threshold": 0.99,
+          "test_total_cost": 20321.0,
+          "test_average_cost": 0.17205439089646765
+        },
+        "fp_fn_1_20": {
+          "fp_cost": 1.0,
+          "fn_cost": 20.0,
+          "frozen_threshold": 0.99,
+          "test_total_cost": 81281.0,
+          "test_average_cost": 0.6881921631049548
+        }
+      }
+    },
+    {
+      "model_key": "dummy",
+      "precision": 0.034409184813899145,
+      "recall": 1.0,
+      "f1": 0.06652915561667158,
+      "false_positive_rate": 1.0,
+      "roc_auc": 0.5,
+      "pr_auc": 0.034409184813899145,
+      "predicted_positive_rate": 1.0,
+      "frozen_threshold": 0.03,
+      "train_seconds": 14.283,
+      "source_work_package": "CW-003",
+      "metrics_source": "cw003_report_json_read_only",
+      "source_report_sha256_declared": "75424985d9721733d0fbca833d1bd14eba03a2bddf7148222dff4b7f2c3e4763",
+      "source_report_file_sha256": "75424985d9721733d0fbca833d1bd14eba03a2bddf7148222dff4b7f2c3e4763",
+      "complexity_note": "常数先验预测器，无特征、无参数估计。",
+      "cost_basis": "historical_test_after_validation_freeze",
+      "cost_unit": "research_relative_cost_not_currency",
+      "cost_scenarios": {
+        "fp_fn_1_1": {
+          "fp_cost": 1.0,
+          "fn_cost": 1.0,
+          "frozen_threshold": 0.99,
+          "test_total_cost": 4064.0,
+          "test_average_cost": 0.034409184813899145
+        },
+        "fp_fn_1_5": {
+          "fp_cost": 1.0,
+          "fn_cost": 5.0,
+          "frozen_threshold": 0.99,
+          "test_total_cost": 20320.0,
+          "test_average_cost": 0.1720459240694957
+        },
+        "fp_fn_1_20": {
+          "fp_cost": 1.0,
+          "fn_cost": 20.0,
+          "frozen_threshold": 0.99,
+          "test_total_cost": 81280.0,
+          "test_average_cost": 0.6881836962779828
+        }
+      }
+    },
+    {
+      "model_key": "logistic_regression",
+      "precision": 0.21797501398471006,
+      "recall": 0.2876476377952756,
+      "f1": 0.24801103214172057,
+      "false_positive_rate": 0.03677527971660061,
+      "roc_auc": 0.8092553436603555,
+      "pr_auc": 0.1421864795715304,
+      "predicted_positive_rate": 0.04540759305042842,
+      "frozen_threshold": 0.83,
+      "train_seconds": 271.874,
+      "source_work_package": "CW-003",
+      "metrics_source": "cw003_report_json_read_only",
+      "source_report_sha256_declared": "75424985d9721733d0fbca833d1bd14eba03a2bddf7148222dff4b7f2c3e4763",
+      "source_report_file_sha256": "75424985d9721733d0fbca833d1bd14eba03a2bddf7148222dff4b7f2c3e4763",
+      "complexity_note": "线性模型：源特征 → 稀疏线性组合，无特征交互。",
+      "cost_basis": "historical_test_after_validation_freeze",
+      "cost_unit": "research_relative_cost_not_currency",
+      "cost_scenarios": {
+        "fp_fn_1_1": {
+          "fp_cost": 1.0,
+          "fn_cost": 1.0,
+          "frozen_threshold": 0.97,
+          "test_total_cost": 5389.0,
+          "test_average_cost": 0.04562773055169844
+        },
+        "fp_fn_1_5": {
+          "fp_cost": 1.0,
+          "fn_cost": 5.0,
+          "frozen_threshold": 0.82,
+          "test_total_cost": 18646.0,
+          "test_average_cost": 0.15787245571849493
+        },
+        "fp_fn_1_20": {
+          "fp_cost": 1.0,
+          "fn_cost": 20.0,
+          "frozen_threshold": 0.53,
+          "test_total_cost": 48110.0,
+          "test_average_cost": 0.4073390456192637
+        }
+      }
+    },
+    {
+      "model_key": "lightgbm",
+      "precision": 0.3730232558139535,
+      "recall": 0.39468503937007876,
+      "f1": 0.38354854136776667,
+      "false_positive_rate": 0.023639998597032724,
+      "roc_auc": 0.8407048367003398,
+      "pr_auc": 0.2734804868512724,
+      "predicted_positive_rate": 0.03640735597927321,
+      "frozen_threshold": 0.11,
+      "train_seconds": 13.942,
+      "source_work_package": "CW-004",
+      "metrics_source": "cw004_single_shot_test_evaluation",
+      "source_report_sha256_declared": "901517448045ee00efa0684d3e7a1bd86d975e9ade31828bc67cf539d75d5582",
+      "source_report_file_sha256": "e8117c5f952759ad9bef893d403c75da12858f0c2e61b24f45cde89526ee9299",
+      "complexity_note": "梯度提升树（1000 棵上限、31 叶、深度不限），非线性与特征交互。",
+      "cost_basis": "historical_test_after_validation_freeze",
+      "cost_unit": "research_relative_cost_not_currency",
+      "cost_scenarios": {
+        "fp_fn_1_1": {
+          "fp_cost": 1.0,
+          "fn_cost": 1.0,
+          "frozen_threshold": 0.12,
+          "test_total_cost": 4126.0,
+          "test_average_cost": 0.03493412808615843
+        },
+        "fp_fn_1_5": {
+          "fp_cost": 1.0,
+          "fn_cost": 5.0,
+          "frozen_threshold": 0.1,
+          "test_total_cost": 15737.0,
+          "test_average_cost": 0.13324245605716803
+        },
+        "fp_fn_1_20": {
+          "fp_cost": 1.0,
+          "fn_cost": 20.0,
+          "frozen_threshold": 0.08,
+          "test_total_cost": 43434.0,
+          "test_average_cost": 0.3677481626985471
+        }
+      }
+    }
+  ],
+  "threshold_cost_comparison": [
+    {
+      "model_key": "dummy",
+      "scenario": "fp_fn_1_1",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 1.0,
+      "selected_threshold": 0.99,
+      "validation_recall": 0.0,
+      "validation_false_positive_rate": 0.0,
+      "validation_false_positive": 0.0,
+      "validation_false_negative": 4611.0,
+      "validation_total_cost": 4611.0,
+      "validation_average_cost": 0.03904053916754157,
+      "validation_f1_threshold": 0.03,
+      "validation_f1_at_f1_threshold": 0.07514728770606019,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "dummy",
+      "scenario": "fp_fn_1_5",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 5.0,
+      "selected_threshold": 0.99,
+      "validation_recall": 0.0,
+      "validation_false_positive_rate": 0.0,
+      "validation_false_positive": 0.0,
+      "validation_false_negative": 4611.0,
+      "validation_total_cost": 23055.0,
+      "validation_average_cost": 0.19520269583770786,
+      "validation_f1_threshold": 0.03,
+      "validation_f1_at_f1_threshold": 0.07514728770606019,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "dummy",
+      "scenario": "fp_fn_1_20",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 20.0,
+      "selected_threshold": 0.99,
+      "validation_recall": 0.0,
+      "validation_false_positive_rate": 0.0,
+      "validation_false_positive": 0.0,
+      "validation_false_negative": 4611.0,
+      "validation_total_cost": 92220.0,
+      "validation_average_cost": 0.7808107833508314,
+      "validation_f1_threshold": 0.03,
+      "validation_f1_at_f1_threshold": 0.07514728770606019,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "lightgbm",
+      "scenario": "fp_fn_1_1",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 1.0,
+      "selected_threshold": 0.12,
+      "validation_recall": 0.2828019952288007,
+      "validation_false_positive_rate": 0.009083940544684,
+      "validation_false_positive": 1031.0,
+      "validation_false_negative": 3307.0,
+      "validation_total_cost": 4338.0,
+      "validation_average_cost": 0.03672909540420632,
+      "validation_f1_threshold": 0.11,
+      "validation_f1_at_f1_threshold": 0.41709364439114793,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "lightgbm",
+      "scenario": "fp_fn_1_5",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 5.0,
+      "selected_threshold": 0.1,
+      "validation_recall": 0.5287356321839081,
+      "validation_false_positive_rate": 0.0438690009427562,
+      "validation_false_positive": 4979.0,
+      "validation_false_negative": 2173.0,
+      "validation_total_cost": 15844.0,
+      "validation_average_cost": 0.13414840654316387,
+      "validation_f1_threshold": 0.11,
+      "validation_f1_at_f1_threshold": 0.41709364439114793,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "lightgbm",
+      "scenario": "fp_fn_1_20",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 20.0,
+      "selected_threshold": 0.08,
+      "validation_recall": 0.6846671004120581,
+      "validation_false_positive_rate": 0.12091949566948906,
+      "validation_false_positive": 13724.0,
+      "validation_false_negative": 1454.0,
+      "validation_total_cost": 42804.0,
+      "validation_average_cost": 0.36241406170623497,
+      "validation_f1_threshold": 0.11,
+      "validation_f1_at_f1_threshold": 0.41709364439114793,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "logistic_regression",
+      "scenario": "fp_fn_1_1",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 1.0,
+      "selected_threshold": 0.97,
+      "validation_recall": 0.18173931901973542,
+      "validation_false_positive_rate": 0.002185079781844454,
+      "validation_false_positive": 248.0,
+      "validation_false_negative": 3773.0,
+      "validation_total_cost": 4021.0,
+      "validation_average_cost": 0.03404511125410641,
+      "validation_f1_threshold": 0.83,
+      "validation_f1_at_f1_threshold": 0.39695578642184104,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "logistic_regression",
+      "scenario": "fp_fn_1_5",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 5.0,
+      "selected_threshold": 0.82,
+      "validation_recall": 0.36694860117111255,
+      "validation_false_positive_rate": 0.019762636897891574,
+      "validation_false_positive": 2243.0,
+      "validation_false_negative": 2919.0,
+      "validation_total_cost": 16838.0,
+      "validation_average_cost": 0.14256443255325635,
+      "validation_f1_threshold": 0.83,
+      "validation_f1_at_f1_threshold": 0.39695578642184104,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "logistic_regression",
+      "scenario": "fp_fn_1_20",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 20.0,
+      "selected_threshold": 0.53,
+      "validation_recall": 0.7004988072001735,
+      "validation_false_positive_rate": 0.1586297435174498,
+      "validation_false_positive": 18004.0,
+      "validation_false_negative": 1381.0,
+      "validation_total_cost": 45624.0,
+      "validation_average_cost": 0.38629051376706064,
+      "validation_f1_threshold": 0.83,
+      "validation_f1_at_f1_threshold": 0.39695578642184104,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "rule_tail_anomaly",
+      "scenario": "fp_fn_1_1",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 1.0,
+      "selected_threshold": 0.99,
+      "validation_recall": 0.0,
+      "validation_false_positive_rate": 1.7621611143906887e-05,
+      "validation_false_positive": 2.0,
+      "validation_false_negative": 4611.0,
+      "validation_total_cost": 4613.0,
+      "validation_average_cost": 0.03905747282148542,
+      "validation_f1_threshold": 0.5,
+      "validation_f1_at_f1_threshold": 0.02199057546765672,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "rule_tail_anomaly",
+      "scenario": "fp_fn_1_5",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 5.0,
+      "selected_threshold": 0.99,
+      "validation_recall": 0.0,
+      "validation_false_positive_rate": 1.7621611143906887e-05,
+      "validation_false_positive": 2.0,
+      "validation_false_negative": 4611.0,
+      "validation_total_cost": 23057.0,
+      "validation_average_cost": 0.1952196294916517,
+      "validation_f1_threshold": 0.5,
+      "validation_f1_at_f1_threshold": 0.02199057546765672,
+      "cost_unit": "research_relative_cost_not_currency"
+    },
+    {
+      "model_key": "rule_tail_anomaly",
+      "scenario": "fp_fn_1_20",
+      "selection_partition": "validation",
+      "selection_rule": "minimum validation total cost; ties choose higher threshold",
+      "fp_cost": 1.0,
+      "fn_cost": 20.0,
+      "selected_threshold": 0.99,
+      "validation_recall": 0.0,
+      "validation_false_positive_rate": 1.7621611143906887e-05,
+      "validation_false_positive": 2.0,
+      "validation_false_negative": 4611.0,
+      "validation_total_cost": 92222.0,
+      "validation_average_cost": 0.7808277170047753,
+      "validation_f1_threshold": 0.5,
+      "validation_f1_at_f1_threshold": 0.02199057546765672,
+      "cost_unit": "research_relative_cost_not_currency"
+    }
+  ],
+  "retrieval_top_k_comparison": [
+    {
+      "top_k": 1,
+      "dataset_version": "cw015-synthetic-reviewed-v1",
+      "n_queries": 9,
+      "positive_queries": 8,
+      "negative_queries": 1,
+      "recall_at_1": 0.5625,
+      "recall_at_k": 0.5625,
+      "mrr": 0.875,
+      "negative_empty_rate": 1.0,
+      "avg_evidence_chars_all_queries": 267.1111111111111,
+      "avg_citation_count_all_queries": 0.8888888888888888,
+      "avg_evidence_chars_positive_queries": 300.5,
+      "avg_citation_count_positive_queries": 1.0,
+      "evidence_measure": "sum of returned verified chunk text lengths; aggregate only",
+      "citation_measure": "unique returned citation IDs; aggregate only"
+    },
+    {
+      "top_k": 3,
+      "dataset_version": "cw015-synthetic-reviewed-v1",
+      "n_queries": 9,
+      "positive_queries": 8,
+      "negative_queries": 1,
+      "recall_at_1": 0.5625,
+      "recall_at_k": 0.8125,
+      "mrr": 0.875,
+      "negative_empty_rate": 1.0,
+      "avg_evidence_chars_all_queries": 614.1111111111111,
+      "avg_citation_count_all_queries": 2.2222222222222223,
+      "avg_evidence_chars_positive_queries": 690.875,
+      "avg_citation_count_positive_queries": 2.5,
+      "evidence_measure": "sum of returned verified chunk text lengths; aggregate only",
+      "citation_measure": "unique returned citation IDs; aggregate only"
+    },
+    {
+      "top_k": 5,
+      "dataset_version": "cw015-synthetic-reviewed-v1",
+      "n_queries": 9,
+      "positive_queries": 8,
+      "negative_queries": 1,
+      "recall_at_1": 0.5625,
+      "recall_at_k": 1.0,
+      "mrr": 0.90625,
+      "negative_empty_rate": 1.0,
+      "avg_evidence_chars_all_queries": 853.4444444444445,
+      "avg_citation_count_all_queries": 3.2222222222222223,
+      "avg_evidence_chars_positive_queries": 960.125,
+      "avg_citation_count_positive_queries": 3.625,
+      "evidence_measure": "sum of returned verified chunk text lengths; aggregate only",
+      "citation_measure": "unique returned citation IDs; aggregate only"
+    }
+  ],
+  "sources": {
+    "schema_version": "cw021_sources_v1",
+    "inputs_config": "configs/cw021_inputs.json",
+    "frozen_sources": [
+      {
+        "path": "configs/ieee_cis_baseline.yaml",
+        "sha256": "2883c5bbf45f969fb84fe790d7b24f7a00db0ca9c7831e955a9419c0881a8368"
+      },
+      {
+        "path": "configs/ieee_cis_lightgbm.yaml",
+        "sha256": "17d629c8d27b40031385a61f924ca4d842bade1540feb46fec9c161eb144a203"
+      },
+      {
+        "path": "configs/retrieval_sources.json",
+        "sha256": "d8d96422e67b645345f7ab7d9558009e82e38116d895ddba487672c76c26e6c6"
+      },
+      {
+        "path": "tests/fixtures/cw015/retrieval_queries.json",
+        "sha256": "59a61b5b511d7e1fdaa07fc0226240ce13f7b783b92454a69290cad56b479a70"
+      },
+      {
+        "path": "artifacts/reports/cw003_ieee_cis_baselines/report.json",
+        "sha256": "75424985d9721733d0fbca833d1bd14eba03a2bddf7148222dff4b7f2c3e4763"
+      },
+      {
+        "path": "artifacts/reports/cw003_ieee_cis_baselines/threshold_curve.csv",
+        "sha256": "81693d27fa33042382b53c4dda4262286471a99386eb37f8c12adc043540470b"
+      },
+      {
+        "path": "artifacts/reports/cw004_lightgbm/report.json",
+        "sha256": "e8117c5f952759ad9bef893d403c75da12858f0c2e61b24f45cde89526ee9299"
+      },
+      {
+        "path": "artifacts/reports/cw004_lightgbm/comparison.csv",
+        "sha256": "fa9a9edc45ae9d467c8ddbcd005506e8d776451bdb24380a2a26915db6e073be"
+      },
+      {
+        "path": "artifacts/reports/cw004_lightgbm/threshold_curve.csv",
+        "sha256": "bd3a806c3526784b7e15611090d0e959375452a63bbe7a1509c8f8f2695ca59b"
+      }
+    ]
+  },
+  "limitations": [
+    "模型组是 CW-003/CW-004 跨来源历史观察性对比，不是同轮重训或单因素消融。",
+    "阈值组只使用 validation 曲线，不依据 test 选点。",
+    "检索组只改变 top-k，使用固定合成查询和同一审查来源快照。",
+    "模型分数不是欺诈概率，成本是研究相对单位，不代表货币损失或生产收益。"
+  ]
+}

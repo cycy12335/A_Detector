@@ -1,0 +1,4 @@
+top_k,dataset_version,n_queries,positive_queries,negative_queries,recall_at_1,recall_at_k,mrr,negative_empty_rate,avg_evidence_chars_all_queries,avg_citation_count_all_queries,avg_evidence_chars_positive_queries,avg_citation_count_positive_queries,evidence_measure,citation_measure
+1,cw015-synthetic-reviewed-v1,9,8,1,0.5625,0.5625,0.875,1.0,267.1111111111111,0.8888888888888888,300.5,1.0,sum of returned verified chunk text lengths; aggregate only,unique returned citation IDs; aggregate only
+3,cw015-synthetic-reviewed-v1,9,8,1,0.5625,0.8125,0.875,1.0,614.1111111111111,2.2222222222222223,690.875,2.5,sum of returned verified chunk text lengths; aggregate only,unique returned citation IDs; aggregate only
+5,cw015-synthetic-reviewed-v1,9,8,1,0.5625,1.0,0.90625,1.0,853.4444444444445,3.2222222222222223,960.125,3.625,sum of returned verified chunk text lengths; aggregate only,unique returned citation IDs; aggregate only

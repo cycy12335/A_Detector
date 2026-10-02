@@ -1,0 +1,73 @@
+{
+  "work_package": "CW-012",
+  "schema_version": "cw012_project_gate_report_v1",
+  "created_at_utc": "2026-10-02T07:38:05.936937+00:00",
+  "status": "passed",
+  "exit_code": 0,
+  "error_code": null,
+  "command_shape": "python scripts/run_project_gate.py",
+  "environment": {
+    "python": "3.14.6",
+    "ruff": "0.14.4",
+    "pytest": "9.1.1"
+  },
+  "phases": {
+    "static": {
+      "status": "passed",
+      "exit_code": 0,
+      "duration_s": 0.263,
+      "violations": 0,
+      "by_code": {},
+      "rules": [
+        "E9",
+        "F63",
+        "F7",
+        "F82",
+        "F811",
+        "F401"
+      ],
+      "paths": [
+        "src/ai_detector",
+        "scripts",
+        "performance",
+        "project_gate",
+        "tests",
+        "conftest.py"
+      ],
+      "detail": "python -m ruff check --no-cache --isolated --select E9,F63,F7,F82,F811,F401 --output-format json src/ai_detector scripts performance project_gate tests conftest.py"
+    },
+    "quality_gate": {
+      "status": "passed",
+      "exit_code": 0,
+      "duration_s": 265.699,
+      "command_shape": "python scripts/run_quality_gate.py --config configs/quality_gate.yaml",
+      "report_present": true,
+      "cw009_status": "passed",
+      "cw009_exit_code": 0,
+      "inputs_match": {
+        "service_config": true,
+        "bundle": true,
+        "policy": true,
+        "corpus": true
+      },
+      "regression": {
+        "cases_passed": 12,
+        "cases_total": 12,
+        "cases_failed": 0,
+        "max_score_absolute_deviation": 0.0,
+        "deterministic": true
+      },
+      "pytest": {
+        "status": "passed",
+        "exit_code": 0,
+        "counts": {
+          "passed": 1951,
+          "skipped": 3,
+          "failed": 0,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "limitations": "本机单进程门禁。CI 输入审计见 docs/ci_readiness.md：当前无 Git 仓库与托管平台，已验收 bundle 被 .gitignore 排除且供给方式未确定，因此不得据此宣称 hosted CI 已运行。"
+}

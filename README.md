@@ -21,9 +21,9 @@
 ## 当前状态
 
 - 项目阶段：P5 作品集交付
-- 当前任务：`CW-020` / `TASK-20261002-001`
-- 状态：`CW-020` 已开包（`new`）；`CW-019` 已独立复验通过
-- 规范入口：`.handoff/latest.md` 与 `.handoff/tasks/TASK-20261002-001/`
+- 当前任务：`CW-021` / `TASK-20261002-002`
+- 状态：`CW-021` 已实施，等待独立验收；`CW-020` 已独立复验通过
+- 规范入口：`.handoff/latest.md` 与 `.handoff/tasks/TASK-20261002-002/`
 
 ## 这是什么
 
@@ -1607,12 +1607,19 @@ CW-018 的 Docker 合成演示证据和 CW-019 的架构/数据流边界；本�
 详见 [docs/cw020_demo_script.md](docs/cw020_demo_script.md)。生成的 PPTX/PDF 位于
 `artifacts/reports/cw020/`，可按 `.handoff/tasks/TASK-20261002-001/result.md` 中记录的 SHA-256 与逐页检查结果复核。
 
-## P5 / 三组可复现对比实验（CW-021，已开包）
+## P5 / 三组可复现对比实验（CW-021）
 
-CW-021 计划汇总 CW-003/004 的历史四模型对比，分析已保存的 validation 阈值与预设成本场景，
-并在 CW-015 固定合成查询集上比较检索 `top-k=1/3/5`。目前仅完成工作包定义，尚无 CW-021
-实验结果。四模型指标属于跨来源汇总；本包不重新训练、不新增 test 评估，也不修改服务模型或政策。
-本地交接与验收判据见 `.handoff/tasks/TASK-20261002-002/`。
+CW-021 聚合 CW-003/004 已验收模型汇总与 validation 阈值/成本曲线，并在 CW-015 固定合成查询集上运行
+`top-k=1/3/5` 检索对比。输入先按 [configs/cw021_inputs.json](configs/cw021_inputs.json) 做 SHA-256
+漂移校验，运行入口为：
+
+```powershell
+python scripts/run_cw021_comparisons.py
+```
+
+结果写入 `artifacts/reports/cw021/`。模型组是跨来源历史观察性对比，阈值组只使用 validation，检索组只改变
+`top-k`；本包不重新训练、不新增 test 评估、不读取原始交易行、不调用 DeepSeek。指标定义和限制见
+[docs/cw021_comparisons.md](docs/cw021_comparisons.md)。
 
 ## 产物位置
 
