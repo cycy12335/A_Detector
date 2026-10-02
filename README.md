@@ -1607,6 +1607,13 @@ CW-018 的 Docker 合成演示证据和 CW-019 的架构/数据流边界；本�
 详见 [docs/cw020_demo_script.md](docs/cw020_demo_script.md)。生成的 PPTX/PDF 位于
 `artifacts/reports/cw020/`，可按 `.handoff/tasks/TASK-20261002-001/result.md` 中记录的 SHA-256 与逐页检查结果复核。
 
+## P5 / 三组可复现对比实验（CW-021，已开包）
+
+CW-021 计划汇总 CW-003/004 的历史四模型对比，分析已保存的 validation 阈值与预设成本场景，
+并在 CW-015 固定合成查询集上比较检索 `top-k=1/3/5`。目前仅完成工作包定义，尚无 CW-021
+实验结果。四模型指标属于跨来源汇总；本包不重新训练、不新增 test 评估，也不修改服务模型或政策。
+本地交接与验收判据见 `.handoff/tasks/TASK-20261002-002/`。
+
 ## 产物位置
 
 | 路径 | 内容 | 是否提交 Git |
