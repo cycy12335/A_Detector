@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import json
 import re
 import struct
@@ -35,6 +36,9 @@ def render(document: Path, output_dir: Path, npx: str, package: str) -> dict[str
         image = output_dir / f"diagram-{index:02d}.png"
         source.write_text(block + "\n", encoding="utf-8")
         command = [npx, "-y", package, "-i", str(source), "-o", str(image)]
+        puppeteer_config = os.environ.get("MERMAID_PUPPETEER_CONFIG")
+        if puppeteer_config:
+            command.extend(["--puppeteerConfigFile", puppeteer_config])
         completed = subprocess.run(
             command,
             cwd=ROOT,

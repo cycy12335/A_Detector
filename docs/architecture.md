@@ -42,9 +42,17 @@ flowchart TD
   api --> risk["/v1/risk/evaluate"]
   api --> decision["/v1/decisions/*"]
   decision --> sqlite[派生结果 SQLite]
-  sources[CW-015 reviewed fragments] --> draft[CW-016 候选与独立校验]
-  draft --> optional[CW-017 显式 DeepSeek API]
-  optional --> draft
+  decision --> snapshot["CW-016 DecisionSnapshot"]
+  sources[CW-015 reviewed fragments] --> context["CW-016 已审查有界上下文"]
+  snapshot --> context
+  context --> offline_candidate["CW-016 generate_candidate"]
+  offline_candidate --> offline_validate["CW-016 validate_candidate"]
+  offline_validate --> offline_result[离线候选结果]
+  snapshot --> deepseek["CW-017 显式 DeepSeek API"]
+  context --> deepseek
+  deepseek --> external_candidate[不可信外部候选]
+  external_candidate --> external_validate["CW-016 独立事实/引用校验"]
+  external_validate --> external_result[外部候选结果]
   compose[compose.demo.yaml] --> demo[CW-018 只读 Docker 演示]
   demo --> api
 ```

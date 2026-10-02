@@ -27,6 +27,9 @@ REQUIRED_TEXT = (
     "validation 同时用于 LightGBM 早停和 F1 阈值冻结",
     "offline_generate[CW-016 generate_candidate]",
     "offline_validator[CW-016 validate_candidate]",
+    'offline_candidate["CW-016 generate_candidate"]',
+    'offline_validate["CW-016 validate_candidate"]',
+    'external_validate["CW-016 独立事实/引用校验"]',
     "199",
     "12/12",
     "f02bb50e61c5f70c85448430c8bb653bd6e347f400220771500ee84a70135a1c",
@@ -58,6 +61,15 @@ def validate() -> dict[str, object]:
             errors.append(f"diagram_{index}_has_no_directional_edge")
     order_checks = (
         (
+            "## 2. 可追溯系统图",
+            (
+                "snapshot --> deepseek",
+                'deepseek["CW-017 显式 DeepSeek API"]',
+                "external_candidate[不可信外部候选]",
+                "external_candidate --> external_validate",
+            ),
+        ),
+        (
             "## 3. 数据流一：离线数据到可交付模型",
             ("fit --> train_model", "train_model --> validation_scores", "validation_scores --> threshold"),
         ),
@@ -83,6 +95,8 @@ def validate() -> dict[str, object]:
         errors.append("possible_api_key_in_document")
     if "CW-003 train-only 特征与阈值" in text or "验证集只用于冻结阈值" in text:
         errors.append("stale_validation_boundary_wording")
+    if "draft --> optional" in text or "optional --> draft" in text:
+        errors.append("stale_llm_candidate_cycle")
     readme_text = README.read_text(encoding="utf-8")
     if "docs/architecture.md" not in readme_text:
         errors.append("readme_architecture_link_missing")
