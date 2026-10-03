@@ -21,9 +21,9 @@
 ## 当前状态
 
 - 项目阶段：P5 作品集交付
-- 当前任务：`CW-021` / `TASK-20261002-002`
-- 状态：`CW-021` 已实施，等待独立验收；`CW-020` 已独立复验通过
-- 规范入口：`.handoff/latest.md` 与 `.handoff/tasks/TASK-20261002-002/`
+- 当前任务：`CW-022` / `TASK-20261003-001`
+- 状态：`CW-022` 已实施，等待独立验收；`CW-021` 已独立复验通过
+- 规范入口：`.handoff/latest.md` 与 `.handoff/tasks/TASK-20261003-001/`
 
 ## 这是什么
 
@@ -1621,10 +1621,17 @@ python scripts/run_cw021_comparisons.py
 `top-k`；本包不重新训练、不新增 test 评估、不读取原始交易行、不调用 DeepSeek。指标定义和限制见
 [docs/cw021_comparisons.md](docs/cw021_comparisons.md)。
 
-## P5 / 典型 Bad Case 与改进记录（CW-022，已开包）
+## P5 / 典型 Bad Case 与改进记录（CW-022，等待独立验收）
 
-CW-022 将从已验收的合成测试和安全报告中选择至少四个不同边界的可复现案例，逐例记录触发条件、
-预期与观察结果、根因证据、当前防护和改进状态。目前仅完成工作包定义，尚无 CW-022 案例结论。
+CW-022 已复现四个不同边界的合成安全案例：无匹配证据返回空、矛盾候选被拒、policy 摘要漂移失败关闭、
+外部模型连续超时降级。运行入口为：
+
+```powershell
+.venv\Scripts\python.exe -X utf8 scripts/run_cw022_bad_cases.py
+```
+
+结果写入 `artifacts/reports/cw022/`；案例卡、根因证据、影响边界和改进矩阵见
+[docs/cw022_bad_cases.md](docs/cw022_bad_cases.md)。案例均为合成/离线边界，不是生产事故或业务误报/漏报结论。
 CW-009 合成回归语料不含真实欺诈标签，不能据此称某例为业务误报或漏报。本地交接与验收判据见
 `.handoff/tasks/TASK-20261003-001/`。
 

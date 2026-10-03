@@ -1,0 +1,166 @@
+{
+  "schema_version": "cw022_results_v1",
+  "run_status": "passed",
+  "upstream": {
+    "task_id": "TASK-20261002-002",
+    "work_package": "CW-021",
+    "accepted_commit": "ee7906227d30289fc5576e43e97dc0f4dad3d11f"
+  },
+  "scope": {
+    "synthetic_only": true,
+    "raw_transactions_read": false,
+    "raw_provider_payloads_written": false,
+    "deepseek_calls": false,
+    "new_training": false,
+    "new_test_evaluation": false
+  },
+  "cases": [
+    {
+      "case_id": "BC-001",
+      "boundary": "retrieval/no_matching_evidence",
+      "input_summary": "CW-015 固定合成查询 q-unsupported；查询文本不写入交付结果。",
+      "reproduction_command": ".venv\\Scripts\\python.exe -X utf8 scripts/run_cw022_bad_cases.py --case BC-001",
+      "expected_status": "empty",
+      "observed_status": "empty",
+      "observed_error_codes": [],
+      "attempts": 0,
+      "transport_calls": 0,
+      "assertion": "returned_hit_count == 0",
+      "root_cause_class": "intentional_fail_closed",
+      "root_cause_evidence": "RetrievalIndex.retrieve 在没有词项命中时返回空元组；CW-015 测试直接断言该行为。",
+      "impact_boundary": "不能生成有来源支撑的候选；不把无证据查询扩写成事实。",
+      "current_defense": "固定审查来源清单、citation 校验和空结果分支。",
+      "improvement_status": "implemented_guard",
+      "source_refs": [
+        {
+          "path": "src/ai_detector/retrieval/core.py",
+          "sha256": "0ee3bcaec8ecbaf3a0013277e79dcd5776adca85db2b50c9a44929a7935557a5"
+        },
+        {
+          "path": "configs/retrieval_sources.json",
+          "sha256": "e0061a133332fd7c64b360206abe7202ee473083dde5587f08e55ab299c1c9e8"
+        },
+        {
+          "path": "tests/fixtures/cw015/retrieval_queries.json",
+          "sha256": "59a61b5b511d7e1fdaa07fc0226240ce13f7b783b92454a69290cad56b479a70"
+        },
+        {
+          "path": "tests/unit/test_cw015_retrieval.py",
+          "sha256": "636c8e174e88a0d73f7d365448a5844b4e5eaaa4253d6d88171efa3c74d1a35d"
+        }
+      ]
+    },
+    {
+      "case_id": "BC-002",
+      "boundary": "candidate_validation/contradictory_fact",
+      "input_summary": "离线合成候选把 flagged 事实改成与 DecisionSnapshot 相反；不写入候选载荷。",
+      "reproduction_command": ".venv\\Scripts\\python.exe -X utf8 scripts/run_cw022_bad_cases.py --case BC-002",
+      "expected_status": "rejected",
+      "observed_status": "rejected",
+      "observed_error_codes": [
+        "fact_mismatch"
+      ],
+      "attempts": 1,
+      "transport_calls": 1,
+      "assertion": "status == rejected and error_codes == (fact_mismatch,)",
+      "root_cause_class": "intentional_fail_closed",
+      "root_cause_evidence": "CW-016 validate_candidate 重新从 DecisionSnapshot 校验跨字段事实，CW-017 断言矛盾候选不产生 draft。",
+      "impact_boundary": "候选被拒绝，不进入 verified 草稿；这不是生产模型误报/漏报证据。",
+      "current_defense": "候选 schema、事实重算、引用集合和 policy 版本独立校验。",
+      "improvement_status": "implemented_guard",
+      "source_refs": [
+        {
+          "path": "src/ai_detector/investigation/draft.py",
+          "sha256": "3d38fc1f6ded1b6fbfc416c2c83e8c140e7b755be0be0021f91bd80855b3b3e5"
+        },
+        {
+          "path": "src/ai_detector/investigation/synthetic.py",
+          "sha256": "01e43998d8da651aee2688cf34d78640ab207f63981ab48cbeb30c47e9f00753"
+        },
+        {
+          "path": "src/ai_detector/investigation/generation.py",
+          "sha256": "8f2dbd5778ec69d9d8dc24e8bd941ae04671196ca4e92cef9b14794a5661d18a"
+        },
+        {
+          "path": "tests/unit/test_cw017_generation.py",
+          "sha256": "393bc5b2bb8eb2b777ea33413fbbbed2488a3e0fbab096ea155f2b99dc736491"
+        }
+      ]
+    },
+    {
+      "case_id": "BC-003",
+      "boundary": "policy_or_bundle_drift/policy_digest",
+      "input_summary": "合成决策携带错误 policy SHA；不读取或输出原始决策载荷。",
+      "reproduction_command": ".venv\\Scripts\\python.exe -X utf8 scripts/run_cw022_bad_cases.py --case BC-003",
+      "expected_status": "degraded",
+      "observed_status": "degraded",
+      "observed_error_codes": [
+        "policy_digest_mismatch"
+      ],
+      "attempts": 0,
+      "transport_calls": 0,
+      "assertion": "status == degraded, error_codes == (policy_digest_mismatch,), transport_calls == 0",
+      "root_cause_class": "intentional_fail_closed",
+      "root_cause_evidence": "CW-016 _policy_chunks 比较 snapshot SHA 与已审查 policy chunk；CW-017 断言在 transport 前降级。",
+      "impact_boundary": "调查生成停止，不产生候选；这是配置/资产完整性保护，不是业务模型效果问题。",
+      "current_defense": "来源 manifest SHA、policy version 和 policy digest 三重绑定。",
+      "improvement_status": "implemented_guard",
+      "source_refs": [
+        {
+          "path": "src/ai_detector/investigation/draft.py",
+          "sha256": "3d38fc1f6ded1b6fbfc416c2c83e8c140e7b755be0be0021f91bd80855b3b3e5"
+        },
+        {
+          "path": "src/ai_detector/investigation/synthetic.py",
+          "sha256": "01e43998d8da651aee2688cf34d78640ab207f63981ab48cbeb30c47e9f00753"
+        },
+        {
+          "path": "src/ai_detector/investigation/generation.py",
+          "sha256": "8f2dbd5778ec69d9d8dc24e8bd941ae04671196ca4e92cef9b14794a5661d18a"
+        },
+        {
+          "path": "tests/unit/test_cw017_generation.py",
+          "sha256": "393bc5b2bb8eb2b777ea33413fbbbed2488a3e0fbab096ea155f2b99dc736491"
+        }
+      ]
+    },
+    {
+      "case_id": "BC-004",
+      "boundary": "external_model/timeout_degradation",
+      "input_summary": "离线 fake transport 连续两次超时；不发起真实外部模型调用。",
+      "reproduction_command": ".venv\\Scripts\\python.exe -X utf8 scripts/run_cw022_bad_cases.py --case BC-004",
+      "expected_status": "degraded",
+      "observed_status": "degraded",
+      "observed_error_codes": [
+        "provider_timeout"
+      ],
+      "attempts": 2,
+      "transport_calls": 2,
+      "assertion": "status == degraded, error_codes == (provider_timeout,), attempts == calls == 2",
+      "root_cause_class": "intentional_fail_closed",
+      "root_cause_evidence": "ControlledGenerator 只在 max_retries/max_calls 范围内重试，连续 ProviderTimeout 后返回稳定错误码。",
+      "impact_boundary": "没有候选草稿；系统保留降级状态，不把超时当作模型结论。",
+      "current_defense": "调用次数、重试上限、超时错误分类和无 draft 返回。",
+      "improvement_status": "implemented_guard",
+      "source_refs": [
+        {
+          "path": "src/ai_detector/investigation/generation.py",
+          "sha256": "8f2dbd5778ec69d9d8dc24e8bd941ae04671196ca4e92cef9b14794a5661d18a"
+        },
+        {
+          "path": "src/ai_detector/investigation/synthetic.py",
+          "sha256": "01e43998d8da651aee2688cf34d78640ab207f63981ab48cbeb30c47e9f00753"
+        },
+        {
+          "path": "tests/unit/test_cw017_generation.py",
+          "sha256": "393bc5b2bb8eb2b777ea33413fbbbed2488a3e0fbab096ea155f2b99dc736491"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "四例均为合成/离线安全边界复现，不是生产事故记录。",
+    "CW-009 合成回归语料没有真实业务标签，不能据此声称欺诈误报或漏报。",
+    "本包记录主动失败关闭与降级行为，不评价模型业务效果。"
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "schema_version": "cw022_sources_v1",
+  "inputs_config": "configs/cw022_inputs.json",
+  "frozen_sources": [
+    {
+      "path": "scripts/run_cw022_bad_cases.py",
+      "sha256": "43c9ab798a6915e07d27e1013af8fee90377371743a6187396ddb42146ce664c"
+    },
+    {
+      "path": "src/ai_detector/retrieval/core.py",
+      "sha256": "0ee3bcaec8ecbaf3a0013277e79dcd5776adca85db2b50c9a44929a7935557a5"
+    },
+    {
+      "path": "tests/unit/test_cw015_retrieval.py",
+      "sha256": "636c8e174e88a0d73f7d365448a5844b4e5eaaa4253d6d88171efa3c74d1a35d"
+    },
+    {
+      "path": "configs/retrieval_sources.json",
+      "sha256": "e0061a133332fd7c64b360206abe7202ee473083dde5587f08e55ab299c1c9e8"
+    },
+    {
+      "path": "tests/fixtures/cw015/retrieval_queries.json",
+      "sha256": "59a61b5b511d7e1fdaa07fc0226240ce13f7b783b92454a69290cad56b479a70"
+    },
+    {
+      "path": "src/ai_detector/investigation/draft.py",
+      "sha256": "3d38fc1f6ded1b6fbfc416c2c83e8c140e7b755be0be0021f91bd80855b3b3e5"
+    },
+    {
+      "path": "src/ai_detector/investigation/synthetic.py",
+      "sha256": "01e43998d8da651aee2688cf34d78640ab207f63981ab48cbeb30c47e9f00753"
+    },
+    {
+      "path": "src/ai_detector/investigation/generation.py",
+      "sha256": "8f2dbd5778ec69d9d8dc24e8bd941ae04671196ca4e92cef9b14794a5661d18a"
+    },
+    {
+      "path": "tests/unit/test_cw017_generation.py",
+      "sha256": "393bc5b2bb8eb2b777ea33413fbbbed2488a3e0fbab096ea155f2b99dc736491"
+    }
+  ],
+  "case_sources": {
+    "BC-001": [
+      "src/ai_detector/retrieval/core.py",
+      "configs/retrieval_sources.json",
+      "tests/fixtures/cw015/retrieval_queries.json",
+      "tests/unit/test_cw015_retrieval.py"
+    ],
+    "BC-002": [
+      "src/ai_detector/investigation/draft.py",
+      "src/ai_detector/investigation/synthetic.py",
+      "src/ai_detector/investigation/generation.py",
+      "tests/unit/test_cw017_generation.py"
+    ],
+    "BC-003": [
+      "src/ai_detector/investigation/draft.py",
+      "src/ai_detector/investigation/synthetic.py",
+      "src/ai_detector/investigation/generation.py",
+      "tests/unit/test_cw017_generation.py"
+    ],
+    "BC-004": [
+      "src/ai_detector/investigation/generation.py",
+      "src/ai_detector/investigation/synthetic.py",
+      "tests/unit/test_cw017_generation.py"
+    ]
+  }
+}
