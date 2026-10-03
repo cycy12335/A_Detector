@@ -31,6 +31,29 @@ MODEL_FIELDS = (
     "train_seconds",
 )
 
+MODEL_DIFFERENCES: dict[str, dict[str, str]] = {
+    "rule_tail_anomaly": {
+        "feature_scope": "仅使用 TransactionAmt 与 C13 两个显式源字段；不消费 199 特征契约。",
+        "preprocessing": "无通用模型预处理；仅在 train 分区分别估计两个字段的 0.99 分位数，分数为两个命中指示器的均值。",
+        "training_protocol": "无监督尾部启发式，不使用标签、不拟合分类器；阈值状态由 train 分区统计量冻结。",
+    },
+    "dummy": {
+        "feature_scope": "不使用特征值；虽处于 CW-003 的共享数据/预处理管线中，但 DummyClassifier 的决策只输出 train 类别先验。",
+        "preprocessing": "沿用 CW-003 的 train-only 列决策和稀疏输入装配；模型本身不读取特征内容，不产生特征交互。",
+        "training_protocol": "DummyClassifier(strategy=prior, random_state=42)，从 train 标签估计常数先验；无参数搜索。",
+    },
+    "logistic_regression": {
+        "feature_scope": "消费 199 个保留源特征（194 数值、5 类别），转换为 348 维稀疏输入；无交互项。",
+        "preprocessing": "train-only 缺失率/常量/基数筛选；数值列 median 插补、缺失指示器、standard scaling；类别列 most_frequent 插补、one-hot、未知类别忽略；identity_present 不进入模型。",
+        "training_protocol": "LogisticRegression(C=1.0, class_weight=balanced, solver=lbfgs, max_iter=3000, tol=1e-4, fit_intercept=true, random_state=42)；max_iter 调整仅因收敛诊断。",
+    },
+    "lightgbm": {
+        "feature_scope": "复用 CW-003 的 199 个保留源特征和 348 维稀疏转换契约；不重新定义特征清单。",
+        "preprocessing": "复用 CW-003 已冻结的 train-only 列决策与稀疏预处理；CW-004 仅引用并校验 feature manifest，不新增预处理规则。",
+        "training_protocol": "LGBMClassifier(gbdt, n_estimators=1000, learning_rate=0.05, num_leaves=31, max_depth=-1, min_child_samples=20, random_state=42, n_jobs=1, deterministic=true)；scale_pos_weight 由 train 标签计算，validation 上 binary_logloss 早停 50 轮。",
+    },
+}
+
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -84,6 +107,59 @@ def historical_costs(report: dict[str, Any], model_key: str) -> dict[str, Any]:
     return result
 
 
+def validate_model_source(
+    config: dict[str, Any], row: dict[str, str], report_path: Path, report: dict[str, Any]
+) -> dict[str, str]:
+    package = row["source_work_package"]
+    contract = config["model_source_contract"].get(package)
+    if contract is None:
+        raise ValueError(f"model_source_contract_missing:{package}")
+    if rel(report_path) != contract["report_path"]:
+        raise ValueError(f"model_source_report_path_mismatch:{package}")
+    report_sha = sha256_file(report_path)
+    if report_sha != contract["report_sha256"]:
+        raise ValueError(f"model_source_report_drift:{package}")
+    config_path = PROJECT_ROOT / contract["config_path"]
+    config_sha = sha256_file(config_path)
+    if config_sha != contract["current_config_sha256"]:
+        raise ValueError(f"model_source_current_config_drift:{package}")
+    if config["frozen_sources"].get(contract["config_path"]) != config_sha:
+        raise ValueError(f"model_source_current_config_not_frozen:{package}")
+    report_config = report.get("config", {})
+    historical_config_sha = report_config.get("config_sha256")
+    if historical_config_sha != contract["historical_config_sha256"]:
+        raise ValueError(f"model_source_historical_config_mismatch:{package}")
+    declared = row["source_report_sha256"]
+    expected_declared = contract["historical_config_sha256"] if package == "CW-004" else report_sha
+    if declared != expected_declared:
+        raise ValueError(f"model_source_declared_sha_semantics_mismatch:{row['model_key']}")
+    if row["metrics_source"] != ("cw004_single_shot_test_evaluation" if package == "CW-004" else "cw003_report_json_read_only"):
+        raise ValueError(f"model_metrics_source_mismatch:{row['model_key']}")
+    if "baselines" in report:
+        source_row = report["baselines"].get(row["model_key"], {}).get("test", {}).get("metrics")
+    else:
+        source_rows = report.get("comparison", [])
+        source_row = next((item for item in source_rows if item.get("model_key") == row["model_key"]), None)
+    if source_row is None:
+        raise ValueError(f"model_report_row_missing:{row['model_key']}")
+    for field in MODEL_FIELDS:
+        report_field = field
+        if field == "frozen_threshold" and report_field not in source_row:
+            report_field = "threshold"
+        report_value = source_row.get(report_field)
+        if field == "train_seconds" and "baselines" in report:
+            report_value = report["baselines"][row["model_key"]].get("fit_seconds")
+        if report_value is None or abs(number(row[field]) - float(report_value)) > 1e-12:
+            raise ValueError(f"model_metric_source_mismatch:{row['model_key']}:{field}")
+    return {
+        "source_report_sha256_actual": report_sha,
+        "source_report_sha256_semantics": contract["declared_sha_semantics"],
+        "source_config_path": contract["config_path"],
+        "source_config_sha256_current": config_sha,
+        "source_config_sha256_historical": historical_config_sha,
+    }
+
+
 def model_comparison(config: dict[str, Any]) -> list[dict[str, Any]]:
     path = PROJECT_ROOT / "artifacts/reports/cw004_lightgbm/comparison.csv"
     rows = read_csv(path)
@@ -99,6 +175,7 @@ def model_comparison(config: dict[str, Any]) -> list[dict[str, Any]]:
             else "artifacts/reports/cw004_lightgbm/report.json"
         )
         report = json.loads(report_path.read_text(encoding="utf-8"))
+        source_metadata = validate_model_source(config, row, report_path, report)
         values: dict[str, Any] = {"model_key": row["model_key"]}
         values.update({field: number(row[field]) for field in MODEL_FIELDS})
         values.update(
@@ -106,7 +183,8 @@ def model_comparison(config: dict[str, Any]) -> list[dict[str, Any]]:
                 "source_work_package": package,
                 "metrics_source": row["metrics_source"],
                 "source_report_sha256_declared": row["source_report_sha256"],
-                "source_report_file_sha256": sha256_file(report_path),
+                **source_metadata,
+                **MODEL_DIFFERENCES[row["model_key"]],
                 "complexity_note": row["complexity_note"],
                 "cost_basis": "historical_test_after_validation_freeze",
                 "cost_unit": "research_relative_cost_not_currency",
@@ -276,6 +354,7 @@ def main() -> int:
             "frozen_sources": [
                 {"path": key, "sha256": value} for key, value in config["frozen_sources"].items()
             ],
+            "model_source_contract": config["model_source_contract"],
         }
         results = {
             "schema_version": "cw021_results_v1",

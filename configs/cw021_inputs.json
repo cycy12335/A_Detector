@@ -11,6 +11,24 @@
     "artifacts/reports/cw004_lightgbm/comparison.csv": "fa9a9edc45ae9d467c8ddbcd005506e8d776451bdb24380a2a26915db6e073be",
     "artifacts/reports/cw004_lightgbm/threshold_curve.csv": "bd3a806c3526784b7e15611090d0e959375452a63bbe7a1509c8f8f2695ca59b"
   },
+  "model_source_contract": {
+    "CW-003": {
+      "report_path": "artifacts/reports/cw003_ieee_cis_baselines/report.json",
+      "report_sha256": "75424985d9721733d0fbca833d1bd14eba03a2bddf7148222dff4b7f2c3e4763",
+      "config_path": "configs/ieee_cis_baseline.yaml",
+      "current_config_sha256": "2883c5bbf45f969fb84fe790d7b24f7a00db0ca9c7831e955a9419c0881a8368",
+      "historical_config_sha256": "2883c5bbf45f969fb84fe790d7b24f7a00db0ca9c7831e955a9419c0881a8368",
+      "declared_sha_semantics": "report_file_sha256"
+    },
+    "CW-004": {
+      "report_path": "artifacts/reports/cw004_lightgbm/report.json",
+      "report_sha256": "e8117c5f952759ad9bef893d403c75da12858f0c2e61b24f45cde89526ee9299",
+      "config_path": "configs/ieee_cis_lightgbm.yaml",
+      "current_config_sha256": "17d629c8d27b40031385a61f924ca4d842bade1540feb46fec9c161eb144a203",
+      "historical_config_sha256": "901517448045ee00efa0684d3e7a1bd86d975e9ade31828bc67cf539d75d5582",
+      "declared_sha_semantics": "historical_config_sha256"
+    }
+  },
   "retrieval_top_k": [1, 3, 5],
   "cost_scenarios": {
     "fp_fn_1_1": {"fp_cost": 1.0, "fn_cost": 1.0},

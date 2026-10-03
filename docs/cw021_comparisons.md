@@ -12,7 +12,18 @@ python scripts/run_cw021_comparisons.py
 
 ## 组一：历史模型跨来源观察性对比
 
-输入为 CW-003 三基线与 CW-004 LightGBM 的已验收汇总。共同口径是 IEEE-CIS 时间切分、199 个源特征契约、validation 冻结阈值后的一次 test 评估；差异项包括训练工作包、模型家族、预处理与训练实现。由于三基线和 LightGBM 来自不同工作包及候选运行，结果是跨来源观察性比较，不是同一轮重训，也不是单因素模型消融。
+输入为 CW-003 三基线与 CW-004 LightGBM 的已验收汇总。共同口径是 IEEE-CIS 时间切分、validation 冻结阈值后的一次 test 评估；199 个源特征契约只适用于 LogisticRegression 与 LightGBM，Rule 只读 2 个源字段，Dummy 不使用特征值。由于三基线和 LightGBM 来自不同工作包及候选运行，结果是跨来源观察性比较，不是同一轮重训，也不是单因素模型消融。
+
+来源 SHA 的语义被显式区分并由脚本 fail-closed 校验：CW-003 的历史比较表 `source_report_sha256` 是报告文件 SHA；CW-004 的历史比较表该字段实际是历史运行配置 SHA `901517448045ee00efa0684d3e7a1bd86d975e9ade31828bc67cf539d75d5582`，不是报告文件 SHA。脚本同时校验当前配置 SHA、历史报告内 `config.config_sha256`、报告文件 SHA，以及比较表指标行；结果中分别输出 `source_report_sha256_actual`、`source_config_sha256_current`、`source_config_sha256_historical` 与语义字段。
+
+逐模型差异记录如下：
+
+| 模型 | 特征范围 | 预处理 | 训练/拟合条件 |
+|---|---|---|---|
+| Rule | `TransactionAmt`、`C13` 两个源字段 | train 分区各自估计 0.99 分位数；均值指示器打分 | 无监督尾部启发式，不使用标签、不拟合分类器 |
+| Dummy | 不使用特征值 | 处于 CW-003 共享装配管线，但模型忽略输入特征 | `DummyClassifier(strategy=prior, random_state=42)`，只估计 train 类别先验 |
+| LogisticRegression | 199 个源特征（194 数值、5 类别）→348 维稀疏输入 | train-only 筛选；数值 median/缺失指示器/标准化；类别 most-frequent/one-hot | `C=1.0`、`class_weight=balanced`、`lbfgs`、`max_iter=3000`、无交互项 |
+| LightGBM | 复用同一 199→348 特征契约 | 复用 CW-003 已冻结预处理，不重新定义 | GBDT，1000 棵上限、31 叶、`learning_rate=0.05`；`scale_pos_weight` 由 train 计算，validation 早停 |
 
 输出指标来自历史 `comparison.csv`：precision、recall、F1、FPR、ROC-AUC、PR-AUC、predicted-positive rate、冻结阈值和训练耗时；成本来自各历史报告的 test 成本场景。成本单位是研究用相对单位，不是货币损失，不代表生产收益或风险偏好。
 
