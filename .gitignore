@@ -62,3 +62,5 @@ CLAUDE.md
 .vscode/
 Thumbs.db
 desktop.ini
+.codex/
+.codex-finalizer/
