@@ -1,13 +1,13 @@
 {
   "schema_version": "cw023_claim_inputs_v1",
   "claims_document": "docs/cw023_resume_claims.md",
-  "claims_document_sha256": "5c1c310d24c8a681e579faf10d418454fcea816b9d1d2f9ac07ee91a4c60981b",
+  "claims_document_sha256": "b6aa8f5781001c39b7f3ae6ad601804a06f048fe953d5e498ffcf642eb6df8e1",
   "frozen_sources": [
     {"path": "README.md", "sha256": "2ebf48e977660a1771f7025e5cf7dd69597faa8ff12c05b38087ce393f288d49"},
     {"path": "configs/retrieval_sources.json", "sha256": "60e04baea99a2009be9a32cb80f7ce9dd4b1d35ba317a7cf25ef31269652cf7a"},
     {"path": "artifacts/reports/cw004_lightgbm/report.json", "sha256": "e8117c5f952759ad9bef893d403c75da12858f0c2e61b24f45cde89526ee9299"},
     {"path": "artifacts/reports/cw004_lightgbm/comparison.csv", "sha256": "fa9a9edc45ae9d467c8ddbcd005506e8d776451bdb24380a2a26915db6e073be"},
-    {"path": "artifacts/reports/cw009_quality_gate/report.json", "sha256": "bb6e8bc59e72b2e6a2facf56fd980f43aa19d2c4d1714302d41ab96cae29ba3a"},
+    {"path": "artifacts/reports/cw009_quality_gate/report.json", "sha256": "85ac9c0debf9ae0717033080b3c91bd0843b821e3f7b5363bdb9d349f64ad196"},
     {"path": "artifacts/reports/cw012_project_gate/report.json", "sha256": "b192f1a56edcf376750b25ddab4d395edf50a899f15066dd26310e53e70f79c1"},
     {"path": "artifacts/reports/cw018_docker_acceptance/report.json", "sha256": "ce4909cb99939d16313ac11e3fe7858f6525ff471b969f53fea67ddd62916b77"},
     {"path": "artifacts/reports/cw021/cw021_results.json", "sha256": "f3f9fc22a80515deabcf0b0de4791b46077a759f18819235f306af6f4fc9b1cc"},
@@ -18,6 +18,8 @@
     {"path": "scripts/validate_architecture_docs.py", "sha256": "e8881ca29e41f4db44222c3021c043a21150e182aa6565ab185d25ccaff34c66"},
     {"path": "scripts/run_cw021_comparisons.py", "sha256": "f366a1df023681d3132cb98695dedfb9ae9ce1b87ad8cc1fec419765113ef182"},
     {"path": "scripts/run_cw022_bad_cases.py", "sha256": "be259b9fc51ea2dd40d4e5252246c4b0428fa55bcb912d85c64f2d8752512753"},
+    {"path": "scripts/verify_cw023_historical_metric.py", "sha256": "4f684567110155d85df92bb57749607372fd522922fc51a9f0466ba6b576c3c3"},
+    {"path": "configs/ieee_cis_lightgbm.yaml", "sha256": "17d629c8d27b40031385a61f924ca4d842bade1540feb46fec9c161eb144a203"},
     {"path": "tests/fixtures/cw009/model_regression_cases.json", "sha256": "d58166b70223af0adb443b9acff0690e6e3c571110dc11b16c2395a8d6fdc4b0"},
     {"path": "tests/fixtures/cw015/retrieval_queries.json", "sha256": "59a61b5b511d7e1fdaa07fc0226240ce13f7b783b92454a69290cad56b479a70"}
   ],
@@ -25,6 +27,10 @@
     {
       "id": "CW023-C01",
       "text_token": "12/12",
+      "text_assertions": [
+        {"language": "zh", "contains": "固定合成回归集上实现 12/12 回归通过"},
+        {"language": "en", "contains": "with 12/12 synthetic regression cases passing"}
+      ],
       "source_path": "artifacts/reports/cw009_quality_gate/report.json",
       "assertions": [
         {"kind": "json_equals", "path": "regression.cases_total", "expected": 12},
@@ -35,6 +41,10 @@
     {
       "id": "CW023-C02",
       "text_token": "0 个静态违规、回归 12/12",
+      "text_assertions": [
+        {"language": "zh", "contains": "0 个静态违规、回归 12/12"},
+        {"language": "en", "contains": "0 static violations"}
+      ],
       "source_path": "artifacts/reports/cw012_project_gate/report.json",
       "assertions": [
         {"kind": "json_equals", "path": "phases.static.violations", "expected": 0},
@@ -45,6 +55,10 @@
     {
       "id": "CW023-C03",
       "text_token": "Recall@5=1.00000",
+      "text_assertions": [
+        {"language": "zh", "contains": "Recall@5=1.00000、MRR=0.90625、负向空结果率=1.00000"},
+        {"language": "en", "contains": "Recall@5=1.00000, MRR=0.90625, and a 1.00000 negative-empty rate"}
+      ],
       "source_path": "artifacts/reports/cw021/cw021_results.json",
       "assertions": [
         {"kind": "retrieval_row", "top_k": 5, "field": "recall_at_k", "expected": 1.0},
@@ -56,6 +70,10 @@
     {
       "id": "CW023-C04",
       "text_token": "4 个边界案例 + 2 个负向控制",
+      "text_assertions": [
+        {"language": "zh", "contains": "4 个边界案例 + 2 个负向控制验证 fail-closed 行为"},
+        {"language": "en", "contains": "4 boundary cases plus 2 negative controls passed"}
+      ],
       "source_path": "artifacts/reports/cw022/cw022_results.json",
       "assertions": [
         {"kind": "json_list_count", "path": "cases", "expected": 4},
@@ -69,6 +87,10 @@
     {
       "id": "CW023-C05",
       "text_token": "6/6 HTTP 检查通过",
+      "text_assertions": [
+        {"language": "zh", "contains": "Docker 演示的 6/6 HTTP 检查通过"},
+        {"language": "en", "contains": "Docker demo passed 6/6 HTTP checks"}
+      ],
       "source_path": "artifacts/reports/cw018_docker_acceptance/report.json",
       "assertions": [
         {"kind": "json_equals", "path": "all_checks_ok", "expected": true},
@@ -81,9 +103,14 @@
     {
       "id": "CW023-C06",
       "text_token": "F1=0.38355",
+      "text_assertions": [
+        {"language": "zh", "contains": "历史 test 分区（118,108 条）取得 F1=0.38355"},
+        {"language": "en", "contains": "F1=0.38355 on a single historical test partition of 118,108 rows"}
+      ],
       "source_path": "artifacts/reports/cw004_lightgbm/report.json",
       "assertions": [
         {"kind": "json_equals", "path": "test_evaluation.partition", "expected": "test"},
+        {"kind": "json_equals", "path": "config.config_sha256", "expected": "901517448045ee00efa0684d3e7a1bd86d975e9ade31828bc67cf539d75d5582"},
         {"kind": "json_equals", "path": "test_evaluation.metrics.n_samples", "expected": 118108},
         {"kind": "json_equals", "path": "test_evaluation.metrics.f1", "expected": 0.38354854136776667}
       ]

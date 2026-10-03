@@ -47,6 +47,18 @@ def assert_text_token(document: str, token: str, claim_id: str) -> None:
         raise AssertionError(f"{claim_id}: text token missing: {token}")
 
 
+def validate_claim_text(inputs: dict[str, Any], document: str) -> None:
+    """核对每条 claim 在中文和英文正文中的精确表述，而不是只查全文 token。"""
+    for claim in inputs["claims"]:
+        assert_text_token(document, claim["text_token"], claim["id"])
+        for assertion in claim.get("text_assertions", []):
+            expected = assertion["contains"]
+            if expected not in document:
+                raise AssertionError(
+                    f"{claim['id']} {assertion['language']} text mismatch: {expected}"
+                )
+
+
 def validate_assertion(assertion: dict[str, Any], source_path: Path, source: Any, document: str) -> None:
     kind = assertion["kind"]
     expected = assertion.get("expected")
@@ -84,6 +96,7 @@ def validate(inputs: dict[str, Any], *, mutate_for_test: bool = False) -> dict[s
         raise AssertionError(
             f"claim document drift: expected {inputs['claims_document_sha256']}, got {actual_document_sha}"
         )
+    validate_claim_text(inputs, document)
     frozen_results = []
     for frozen in inputs["frozen_sources"]:
         path = PROJECT_ROOT / frozen["path"]
@@ -102,7 +115,6 @@ def validate(inputs: dict[str, Any], *, mutate_for_test: bool = False) -> dict[s
     for claim in inputs["claims"]:
         if claim["source_path"] not in source_paths:
             raise AssertionError(f"{claim['id']}: source not frozen: {claim['source_path']}")
-        assert_text_token(document, claim["text_token"], claim["id"])
         source_path = PROJECT_ROOT / claim["source_path"]
         if claim["source_path"] not in source_cache:
             source_cache[claim["source_path"]] = (
@@ -119,14 +131,26 @@ def validate(inputs: dict[str, Any], *, mutate_for_test: bool = False) -> dict[s
                 validate_assertion(assertion, source_path, source, document)
         claim_results.append({"claim_id": claim["id"], "source_path": claim["source_path"], "status": "passed"})
 
-    # A deliberately mutated token is checked in every run so regression can prove fail-closed behavior.
-    negative_token = inputs["claims"][0]["text_token"] + "__MUTATED__"
-    try:
-        assert_text_token(document, negative_token, "CW023-NEG-TEXT")
-    except AssertionError:
-        negative_status = "rejected"
-    else:
-        raise AssertionError("negative text mutation was not rejected")
+    negative_controls = []
+    mutations = [
+        (
+            "CW023-NEG-EN-F1-PARTITION",
+            "F1=0.38355 on a single historical test partition of 118,108 rows",
+            "F1=0.99999 on a single historical validation partition of 118,108 rows",
+        ),
+        ("CW023-NEG-EN-UNIT", "118,108 rows", "118,108 accounts"),
+        ("CW023-NEG-ZH-F1", "F1=0.38355", "F1=0.99999"),
+    ]
+    for control_id, old, new in mutations:
+        mutated_document = document.replace(old, new, 1)
+        if mutated_document == document:
+            raise AssertionError(f"negative mutation source text missing: {control_id}")
+        try:
+            validate_claim_text(inputs, mutated_document)
+        except AssertionError:
+            negative_controls.append({"control_id": control_id, "status": "rejected"})
+        else:
+            raise AssertionError(f"negative text mutation was not rejected: {control_id}")
 
     return {
         "schema_version": "cw023_claim_validation_v1",
@@ -134,7 +158,7 @@ def validate(inputs: dict[str, Any], *, mutate_for_test: bool = False) -> dict[s
         "claim_count": len(claim_results),
         "claims": claim_results,
         "frozen_sources": frozen_results,
-        "negative_controls": [{"control_id": "CW023-NEG-TEXT", "status": negative_status}],
+        "negative_controls": negative_controls,
         "limitations": [
             "来源漂移、缺失 claim token、错误数值或错误分区都会使本命令非零退出。",
             "CW-009 回归集与 CW-022 边界案例均为合成/离线证据，不能写成真实业务 FP/FN 或生产事故。",
