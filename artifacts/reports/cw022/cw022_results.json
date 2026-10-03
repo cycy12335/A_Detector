@@ -22,9 +22,14 @@
       "reproduction_command": ".venv\\Scripts\\python.exe -X utf8 scripts/run_cw022_bad_cases.py --case BC-001",
       "expected_status": "empty",
       "observed_status": "empty",
+      "expected_error_codes": [],
       "observed_error_codes": [],
+      "expected_attempts": 0,
       "attempts": 0,
+      "expected_transport_calls": 0,
       "transport_calls": 0,
+      "expected_draft_present": false,
+      "observed_draft_present": false,
       "assertion": "returned_hit_count == 0",
       "root_cause_class": "intentional_fail_closed",
       "root_cause_evidence": "RetrievalIndex.retrieve 在没有词项命中时返回空元组；CW-015 测试直接断言该行为。",
@@ -57,11 +62,18 @@
       "reproduction_command": ".venv\\Scripts\\python.exe -X utf8 scripts/run_cw022_bad_cases.py --case BC-002",
       "expected_status": "rejected",
       "observed_status": "rejected",
+      "expected_error_codes": [
+        "fact_mismatch"
+      ],
       "observed_error_codes": [
         "fact_mismatch"
       ],
+      "expected_attempts": 1,
       "attempts": 1,
+      "expected_transport_calls": 1,
       "transport_calls": 1,
+      "expected_draft_present": false,
+      "observed_draft_present": false,
       "assertion": "status == rejected and error_codes == (fact_mismatch,)",
       "root_cause_class": "intentional_fail_closed",
       "root_cause_evidence": "CW-016 validate_candidate 重新从 DecisionSnapshot 校验跨字段事实，CW-017 断言矛盾候选不产生 draft。",
@@ -94,11 +106,18 @@
       "reproduction_command": ".venv\\Scripts\\python.exe -X utf8 scripts/run_cw022_bad_cases.py --case BC-003",
       "expected_status": "degraded",
       "observed_status": "degraded",
+      "expected_error_codes": [
+        "policy_digest_mismatch"
+      ],
       "observed_error_codes": [
         "policy_digest_mismatch"
       ],
+      "expected_attempts": 0,
       "attempts": 0,
+      "expected_transport_calls": 0,
       "transport_calls": 0,
+      "expected_draft_present": false,
+      "observed_draft_present": false,
       "assertion": "status == degraded, error_codes == (policy_digest_mismatch,), transport_calls == 0",
       "root_cause_class": "intentional_fail_closed",
       "root_cause_evidence": "CW-016 _policy_chunks 比较 snapshot SHA 与已审查 policy chunk；CW-017 断言在 transport 前降级。",
@@ -131,11 +150,18 @@
       "reproduction_command": ".venv\\Scripts\\python.exe -X utf8 scripts/run_cw022_bad_cases.py --case BC-004",
       "expected_status": "degraded",
       "observed_status": "degraded",
+      "expected_error_codes": [
+        "provider_timeout"
+      ],
       "observed_error_codes": [
         "provider_timeout"
       ],
+      "expected_attempts": 2,
       "attempts": 2,
+      "expected_transport_calls": 2,
       "transport_calls": 2,
+      "expected_draft_present": false,
+      "observed_draft_present": false,
       "assertion": "status == degraded, error_codes == (provider_timeout,), attempts == calls == 2",
       "root_cause_class": "intentional_fail_closed",
       "root_cause_evidence": "ControlledGenerator 只在 max_retries/max_calls 范围内重试，连续 ProviderTimeout 后返回稳定错误码。",
@@ -156,6 +182,50 @@
           "sha256": "393bc5b2bb8eb2b777ea33413fbbbed2488a3e0fbab096ea155f2b99dc736491"
         }
       ]
+    }
+  ],
+  "negative_contract_controls": [
+    {
+      "control_id": "BC-NEG-001",
+      "mutation": "replace provider_timeout with unrelated_error",
+      "observed": "contract_rejected",
+      "failure_code": "BC-NEG-001:error_codes_mismatch"
+    },
+    {
+      "control_id": "BC-NEG-002",
+      "mutation": "replace two transport calls with one",
+      "observed": "contract_rejected",
+      "failure_code": "BC-NEG-002:attempts_mismatch"
+    }
+  ],
+  "improvement_priorities": [
+    {
+      "priority": "P1-maintain",
+      "item": "持续维护来源 SHA、policy version/digest 绑定",
+      "status": "implemented_guard",
+      "rationale": "资产漂移会使全部后续证据不可用，必须优先保持失败关闭。",
+      "validation": "BC-001/BC-003 与 CW-015/CW-017 来源测试"
+    },
+    {
+      "priority": "P1-maintain",
+      "item": "持续维护候选 schema、事实和引用独立校验",
+      "status": "implemented_guard",
+      "rationale": "不可信候选不得进入 verified 草稿，直接影响证据可信度。",
+      "validation": "BC-002 与 CW-017 候选拒绝测试"
+    },
+    {
+      "priority": "P1-maintain",
+      "item": "持续维护外部调用预算、重试和超时降级",
+      "status": "implemented_guard",
+      "rationale": "避免外部故障扩大为无限重试、错误结论或费用失控。",
+      "validation": "BC-004 与 CW-017 timeout 测试"
+    },
+    {
+      "priority": "P2-proposed",
+      "item": "增加脱敏边界事件计数和运营告警",
+      "status": "proposed",
+      "rationale": "当前能安全拒绝/降级，但缺少跨案例趋势可观测性；不改变服务协议或风险政策。",
+      "validation": "后续新增稳定事件计数和脱敏告警测试"
     }
   ],
   "limitations": [

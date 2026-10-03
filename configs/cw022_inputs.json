@@ -6,7 +6,7 @@
     "accepted_commit": "ee7906227d30289fc5576e43e97dc0f4dad3d11f"
   },
   "frozen_sources": {
-    "scripts/run_cw022_bad_cases.py": "43c9ab798a6915e07d27e1013af8fee90377371743a6187396ddb42146ce664c",
+    "scripts/run_cw022_bad_cases.py": "be259b9fc51ea2dd40d4e5252246c4b0428fa55bcb912d85c64f2d8752512753",
     "src/ai_detector/retrieval/core.py": "0ee3bcaec8ecbaf3a0013277e79dcd5776adca85db2b50c9a44929a7935557a5",
     "tests/unit/test_cw015_retrieval.py": "636c8e174e88a0d73f7d365448a5844b4e5eaaa4253d6d88171efa3c74d1a35d",
     "configs/retrieval_sources.json": "e0061a133332fd7c64b360206abe7202ee473083dde5587f08e55ab299c1c9e8",

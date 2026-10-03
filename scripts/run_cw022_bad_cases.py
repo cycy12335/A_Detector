@@ -29,6 +29,37 @@ from ai_detector.retrieval import build_index  # noqa: E402
 INPUTS_PATH = PROJECT_ROOT / "configs/cw022_inputs.json"
 OUTPUT_DIR = PROJECT_ROOT / "artifacts/reports/cw022"
 
+IMPROVEMENT_PRIORITIES = [
+    {
+        "priority": "P1-maintain",
+        "item": "持续维护来源 SHA、policy version/digest 绑定",
+        "status": "implemented_guard",
+        "rationale": "资产漂移会使全部后续证据不可用，必须优先保持失败关闭。",
+        "validation": "BC-001/BC-003 与 CW-015/CW-017 来源测试",
+    },
+    {
+        "priority": "P1-maintain",
+        "item": "持续维护候选 schema、事实和引用独立校验",
+        "status": "implemented_guard",
+        "rationale": "不可信候选不得进入 verified 草稿，直接影响证据可信度。",
+        "validation": "BC-002 与 CW-017 候选拒绝测试",
+    },
+    {
+        "priority": "P1-maintain",
+        "item": "持续维护外部调用预算、重试和超时降级",
+        "status": "implemented_guard",
+        "rationale": "避免外部故障扩大为无限重试、错误结论或费用失控。",
+        "validation": "BC-004 与 CW-017 timeout 测试",
+    },
+    {
+        "priority": "P2-proposed",
+        "item": "增加脱敏边界事件计数和运营告警",
+        "status": "proposed",
+        "rationale": "当前能安全拒绝/降级，但缺少跨案例趋势可观测性；不改变服务协议或风险政策。",
+        "validation": "后续新增稳定事件计数和脱敏告警测试",
+    },
+]
+
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -68,8 +99,13 @@ def case_card(
     expected_status: str,
     observed_status: str,
     error_codes: tuple[str, ...],
+    expected_error_codes: tuple[str, ...],
     attempts: int,
+    expected_attempts: int,
     calls: int,
+    expected_calls: int,
+    draft_present: bool,
+    expected_draft_present: bool,
     assertion: str,
     root_cause_class: str,
     root_cause_evidence: str,
@@ -78,8 +114,19 @@ def case_card(
     improvement_status: str,
     reproduction: str,
 ) -> dict[str, Any]:
-    if observed_status != expected_status:
-        raise AssertionError(f"{case_id}:expected_{expected_status}_got_{observed_status}")
+    enforce_case_contract(
+        case_id,
+        expected_status=expected_status,
+        observed_status=observed_status,
+        error_codes=error_codes,
+        expected_error_codes=expected_error_codes,
+        attempts=attempts,
+        expected_attempts=expected_attempts,
+        calls=calls,
+        expected_calls=expected_calls,
+        draft_present=draft_present,
+        expected_draft_present=expected_draft_present,
+    )
     return {
         "case_id": case_id,
         "boundary": boundary,
@@ -87,9 +134,14 @@ def case_card(
         "reproduction_command": reproduction,
         "expected_status": expected_status,
         "observed_status": observed_status,
+        "expected_error_codes": list(expected_error_codes),
         "observed_error_codes": list(error_codes),
+        "expected_attempts": expected_attempts,
         "attempts": attempts,
+        "expected_transport_calls": expected_calls,
         "transport_calls": calls,
+        "expected_draft_present": expected_draft_present,
+        "observed_draft_present": draft_present,
         "assertion": assertion,
         "root_cause_class": root_cause_class,
         "root_cause_evidence": root_cause_evidence,
@@ -98,6 +150,33 @@ def case_card(
         "improvement_status": improvement_status,
         "source_refs": source_refs(config, case_id),
     }
+
+
+def enforce_case_contract(
+    case_id: str,
+    *,
+    expected_status: str,
+    observed_status: str,
+    error_codes: tuple[str, ...],
+    expected_error_codes: tuple[str, ...],
+    attempts: int,
+    expected_attempts: int,
+    calls: int,
+    expected_calls: int,
+    draft_present: bool,
+    expected_draft_present: bool,
+) -> None:
+    """Make every claim in a case card an executable assertion."""
+    if observed_status != expected_status:
+        raise AssertionError(f"{case_id}:status_mismatch")
+    if error_codes != expected_error_codes:
+        raise AssertionError(f"{case_id}:error_codes_mismatch")
+    if attempts != expected_attempts:
+        raise AssertionError(f"{case_id}:attempts_mismatch")
+    if calls != expected_calls:
+        raise AssertionError(f"{case_id}:transport_calls_mismatch")
+    if draft_present != expected_draft_present:
+        raise AssertionError(f"{case_id}:draft_presence_mismatch")
 
 
 def reproduce_bc001(config: dict[str, Any]) -> dict[str, Any]:
@@ -112,8 +191,13 @@ def reproduce_bc001(config: dict[str, Any]) -> dict[str, Any]:
         "empty",
         "empty" if not hits else "non_empty",
         (),
+        (),
         0,
         0,
+        0,
+        0,
+        False,
+        False,
         "returned_hit_count == 0",
         "intentional_fail_closed",
         "RetrievalIndex.retrieve 在没有词项命中时返回空元组；CW-015 测试直接断言该行为。",
@@ -143,8 +227,13 @@ def reproduce_bc002(config: dict[str, Any]) -> dict[str, Any]:
         "rejected",
         outcome.status,
         outcome.error_codes,
+        ("fact_mismatch",),
         outcome.attempts,
+        1,
         outcome.calls,
+        1,
+        outcome.draft is not None,
+        False,
         "status == rejected and error_codes == (fact_mismatch,)",
         "intentional_fail_closed",
         "CW-016 validate_candidate 重新从 DecisionSnapshot 校验跨字段事实，CW-017 断言矛盾候选不产生 draft。",
@@ -169,8 +258,13 @@ def reproduce_bc003(config: dict[str, Any]) -> dict[str, Any]:
         "degraded",
         outcome.status,
         outcome.error_codes,
+        ("policy_digest_mismatch",),
         outcome.attempts,
+        0,
         outcome.calls,
+        0,
+        outcome.draft is not None,
+        False,
         "status == degraded, error_codes == (policy_digest_mismatch,), transport_calls == 0",
         "intentional_fail_closed",
         "CW-016 _policy_chunks 比较 snapshot SHA 与已审查 policy chunk；CW-017 断言在 transport 前降级。",
@@ -195,8 +289,13 @@ def reproduce_bc004(config: dict[str, Any]) -> dict[str, Any]:
         "degraded",
         outcome.status,
         outcome.error_codes,
+        ("provider_timeout",),
         outcome.attempts,
+        2,
         outcome.calls,
+        2,
+        outcome.draft is not None,
+        False,
         "status == degraded, error_codes == (provider_timeout,), attempts == calls == 2",
         "intentional_fail_closed",
         "ControlledGenerator 只在 max_retries/max_calls 范围内重试，连续 ProviderTimeout 后返回稳定错误码。",
@@ -215,6 +314,59 @@ CASES: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
 }
 
 
+def negative_contract_controls() -> list[dict[str, str]]:
+    controls = [
+        {
+            "control_id": "BC-NEG-001",
+            "mutation": "replace provider_timeout with unrelated_error",
+            "actual_error_codes": ("unrelated_error",),
+            "expected_error_codes": ("provider_timeout",),
+            "actual_attempts": 2,
+            "expected_attempts": 2,
+            "actual_calls": 2,
+            "expected_calls": 2,
+        },
+        {
+            "control_id": "BC-NEG-002",
+            "mutation": "replace two transport calls with one",
+            "actual_error_codes": ("provider_timeout",),
+            "expected_error_codes": ("provider_timeout",),
+            "actual_attempts": 1,
+            "expected_attempts": 2,
+            "actual_calls": 1,
+            "expected_calls": 2,
+        },
+    ]
+    results = []
+    for control in controls:
+        try:
+            enforce_case_contract(
+                control["control_id"],
+                expected_status="degraded",
+                observed_status="degraded",
+                error_codes=control["actual_error_codes"],
+                expected_error_codes=control["expected_error_codes"],
+                attempts=control["actual_attempts"],
+                expected_attempts=control["expected_attempts"],
+                calls=control["actual_calls"],
+                expected_calls=control["expected_calls"],
+                draft_present=False,
+                expected_draft_present=False,
+            )
+        except AssertionError as error:
+            results.append(
+                {
+                    "control_id": control["control_id"],
+                    "mutation": control["mutation"],
+                    "observed": "contract_rejected",
+                    "failure_code": str(error),
+                }
+            )
+        else:
+            raise AssertionError(f"{control['control_id']}:negative_control_accepted")
+    return results
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Reproduce CW-022 synthetic safety-boundary cases.")
     parser.add_argument("--case", choices=["all", *CASES], default="all")
@@ -223,6 +375,7 @@ def main() -> int:
         config = load_inputs()
         selected = list(CASES) if args.case == "all" else [args.case]
         cases = [CASES[case_id](config) for case_id in selected]
+        negative_controls = negative_contract_controls() if args.case == "all" else []
         result = {
             "schema_version": "cw022_results_v1",
             "run_status": "passed",
@@ -236,6 +389,8 @@ def main() -> int:
                 "new_test_evaluation": False,
             },
             "cases": cases,
+            "negative_contract_controls": negative_controls,
+            "improvement_priorities": IMPROVEMENT_PRIORITIES,
             "limitations": [
                 "四例均为合成/离线安全边界复现，不是生产事故记录。",
                 "CW-009 合成回归语料没有真实业务标签，不能据此声称欺诈误报或漏报。",
