@@ -8,3 +8,8 @@ tests/fixtures/cw014/rule_baseline_state.json -text
 README.md text eol=lf
 docs/ci_github.md text eol=lf
 configs/retrieval_sources.json text eol=lf
+
+# CW-021/022 generated reports are SHA-256 sources for CW-023.
+artifacts/reports/cw021/* text eol=crlf
+artifacts/reports/cw022/* text eol=crlf
+docs/cw023_resume_claims.md text eol=lf

@@ -112,6 +112,13 @@
 决定 CW-020 仅以 3 至 5 分钟演示脚本为必交，PPT/PDF 可选、视频不要求。技术演示仍以 CW-018
 已验收的合成 Docker 链路为依据；该变化不改变 P5 其余实验、Bad Case 与指标可追溯要求。
 
+2026-10-03 收尾结论：CW-018 至 CW-023 已逐包独立验收。CW-023 最终提交
+`51611e97e18933d594c253533b075185861f65bf` 对应的
+[GitHub Actions #37103879967](https://github.com/cycy12335/A_Detector/actions/runs/37103879967) 成功；
+README 路径的 Docker 合成演示在 Docker Desktop Linux 引擎与授权 bundle 在位时 6/6 HTTP 检查通过，
+简历 7 条 claim 可定位到冻结来源。P5 达到上述退出条件；验收范围和限制见
+[`docs/project_closeout.md`](docs/project_closeout.md)。
+
 ## 4. 延后项
 
 以下内容只有在 P0 至 P4 稳定后再评估：

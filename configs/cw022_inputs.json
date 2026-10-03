@@ -9,7 +9,7 @@
     "scripts/run_cw022_bad_cases.py": "be259b9fc51ea2dd40d4e5252246c4b0428fa55bcb912d85c64f2d8752512753",
     "src/ai_detector/retrieval/core.py": "0ee3bcaec8ecbaf3a0013277e79dcd5776adca85db2b50c9a44929a7935557a5",
     "tests/unit/test_cw015_retrieval.py": "636c8e174e88a0d73f7d365448a5844b4e5eaaa4253d6d88171efa3c74d1a35d",
-    "configs/retrieval_sources.json": "e0061a133332fd7c64b360206abe7202ee473083dde5587f08e55ab299c1c9e8",
+    "configs/retrieval_sources.json": "5a64f8844b44742802aa80a17a3b221b601d1df1c8e34319fed5391c8015ed0e",
     "tests/fixtures/cw015/retrieval_queries.json": "59a61b5b511d7e1fdaa07fc0226240ce13f7b783b92454a69290cad56b479a70",
     "src/ai_detector/investigation/draft.py": "3d38fc1f6ded1b6fbfc416c2c83e8c140e7b755be0be0021f91bd80855b3b3e5",
     "src/ai_detector/investigation/synthetic.py": "01e43998d8da651aee2688cf34d78640ab207f63981ab48cbeb30c47e9f00753",

@@ -3,7 +3,7 @@
   "frozen_sources": {
     "configs/ieee_cis_baseline.yaml": "2883c5bbf45f969fb84fe790d7b24f7a00db0ca9c7831e955a9419c0881a8368",
     "configs/ieee_cis_lightgbm.yaml": "17d629c8d27b40031385a61f924ca4d842bade1540feb46fec9c161eb144a203",
-    "configs/retrieval_sources.json": "d8d96422e67b645345f7ab7d9558009e82e38116d895ddba487672c76c26e6c6",
+    "configs/retrieval_sources.json": "5a64f8844b44742802aa80a17a3b221b601d1df1c8e34319fed5391c8015ed0e",
     "tests/fixtures/cw015/retrieval_queries.json": "59a61b5b511d7e1fdaa07fc0226240ce13f7b783b92454a69290cad56b479a70",
     "artifacts/reports/cw003_ieee_cis_baselines/report.json": "75424985d9721733d0fbca833d1bd14eba03a2bddf7148222dff4b7f2c3e4763",
     "artifacts/reports/cw003_ieee_cis_baselines/threshold_curve.csv": "81693d27fa33042382b53c4dda4262286471a99386eb37f8c12adc043540470b",

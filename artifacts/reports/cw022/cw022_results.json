@@ -43,7 +43,7 @@
         },
         {
           "path": "configs/retrieval_sources.json",
-          "sha256": "e0061a133332fd7c64b360206abe7202ee473083dde5587f08e55ab299c1c9e8"
+          "sha256": "5a64f8844b44742802aa80a17a3b221b601d1df1c8e34319fed5391c8015ed0e"
         },
         {
           "path": "tests/fixtures/cw015/retrieval_queries.json",
