@@ -210,6 +210,8 @@ def test_real_process_does_not_log_raw_urls(tmp_path: Path) -> None:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        encoding="utf-8",
+        errors="replace",
     )
     try:
         assert _wait_until_live(port), "真实进程未在超时内就绪"
