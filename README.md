@@ -91,24 +91,52 @@ python scripts/run_api.py --config configs/service.yaml
 
 ### 运行 Docker 演示
 
-在已有授权 bundle 的前提下：
+先确保 Docker Desktop 已启动，并且项目中已有模型 bundle，然后执行：
 
 ```powershell
-docker compose -f compose.demo.yaml up --build -d
+docker compose -f .\compose.demo.yaml up --build -d
 python scripts/verify_demo.py
-docker compose -f compose.demo.yaml down --remove-orphans
 ```
 
-验证脚本会检查：
+验证通过后停止服务：
 
-1. /health/live
-2. /health/ready
-3. /v1/model
-4. /v1/policy
-5. 合成 /v1/score
-6. 错误特征契约
+```powershell
+docker compose -f .\compose.demo.yaml down --remove-orphans
+```
+
+验证脚本会自动检查健康状态、模型、政策、评分接口和错误输入。
 
 完整前置条件和失败路径见 [docs/docker_demo.md](docs/docker_demo.md)。
+
+### 用外部 CSV 测试
+
+将 CSV 文件复制到：
+
+```text
+data/incoming/external.csv
+```
+
+先测试前 1000 行：
+
+```powershell
+docker compose -f .\compose.demo.yaml up --build -d risk-demo
+docker compose -f .\compose.demo.yaml --profile batch run --rm csv-runner `
+  --input /data/incoming/external.csv `
+  --output /data/output/external_scores_1000.csv `
+  --base-url http://risk-demo:8000 `
+  --id-column TransactionID `
+  --label-column isFraud `
+  --max-rows 1000
+```
+
+结果在：
+
+```text
+data/output/external_scores_1000.csv
+data/output/external_scores_1000.csv.meta.json
+```
+
+确认 1000 行测试成功后，去掉 `--max-rows 1000`，即可处理完整 CSV。输入数据需要包含当前模型要求的 199 个特征；CSV 可以有额外列，批处理程序会自动忽略。`isFraud` 只用于本地评估，不会发送给模型。
 
 ### 运行质量门禁
 
@@ -180,5 +208,6 @@ Docker 演示不会自动下载、复制或替换模型 bundle。请先按照 [d
 - [系统架构、模块说明与技术选型](docs/architecture.md)
 - [开发记录、踩坑与后续计划](docs/development.md)
 - [Docker 本地演示](docs/docker_demo.md)
+- [外部 CSV 自动批处理](docs/external_csv_workflow.md)
 - [3–5 分钟演示讲解脚本](docs/cw020_demo_script.md)
 - [项目收尾、证据与复现入口](docs/project_closeout.md)

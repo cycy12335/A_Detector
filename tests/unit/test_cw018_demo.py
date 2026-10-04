@@ -13,12 +13,14 @@ from ai_detector.service.config import ServiceConfig
 from ai_detector.service.errors import BundleLoadError
 from ai_detector.service.runtime import load_runtime
 from scripts.run_demo import preflight
+from scripts.score_external_csv import records_from_frame, validate_header
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEMO_CONFIG = PROJECT_ROOT / "configs" / "demo_service.yaml"
 COMPOSE_FILE = PROJECT_ROOT / "compose.demo.yaml"
 DOCKERIGNORE_FILE = PROJECT_ROOT / ".dockerignore"
+DOCKERFILE_FILE = PROJECT_ROOT / "Dockerfile.demo"
 
 
 def test_demo_config_is_read_only_and_uses_frozen_inputs() -> None:
@@ -75,3 +77,52 @@ def test_docker_context_excludes_models_data_and_credentials() -> None:
 
     for entry in ("artifacts", "data", ".handoff", "*.env", "*.key", "*.pem", "secrets.*"):
         assert entry in dockerignore
+
+
+def test_demo_image_contains_the_csv_runner_script() -> None:
+    dockerfile = DOCKERFILE_FILE.read_text(encoding="utf-8")
+
+    assert "scripts/score_external_csv.py" in dockerfile
+
+
+def test_external_csv_contract_requires_all_features_but_allows_extra_columns() -> None:
+    required = ["feature_a", "feature_b"]
+
+    validate_header(["feature_a", "feature_b", "TransactionID", "isFraud"], required, id_column="TransactionID")
+
+    with pytest.raises(RuntimeError, match="缺少 1 个模型特征"):
+        validate_header(["feature_a", "TransactionID"], required, id_column="TransactionID")
+
+
+def test_external_csv_records_convert_missing_values_to_json_null() -> None:
+    import pandas as pd
+
+    records = records_from_frame(
+        pd.DataFrame({"feature_a": [1.5, float("nan")], "feature_b": ["x", None]}),
+        ["feature_a", "feature_b"],
+    )
+
+    assert records == [
+        {"feature_a": 1.5, "feature_b": "x"},
+        {"feature_a": None, "feature_b": None},
+    ]
+
+
+def test_compose_has_profile_gated_csv_runner() -> None:
+    compose = yaml.safe_load(COMPOSE_FILE.read_text(encoding="utf-8"))
+    runner = compose["services"]["csv-runner"]
+
+    assert runner["profiles"] == ["batch"]
+    assert runner["depends_on"]["risk-demo"]["condition"] == "service_healthy"
+    assert runner["entrypoint"] == ["python", "scripts/score_external_csv.py"]
+    assert runner["volumes"][0]["read_only"] is True
+    assert runner["volumes"][1]["read_only"] is False
+
+
+def test_csv_output_directories_ignore_runtime_data() -> None:
+    gitignore = (PROJECT_ROOT / ".gitignore").read_text(encoding="utf-8")
+
+    assert "data/incoming/*" in gitignore
+    assert "!data/incoming/.gitkeep" in gitignore
+    assert "data/output/*" in gitignore
+    assert "!data/output/.gitkeep" in gitignore

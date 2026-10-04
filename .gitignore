@@ -29,6 +29,12 @@ secrets.*
 data/generated/*
 !data/generated/.gitkeep
 
+# --- 外部 CSV 批处理输入与结果：保留目录，不提交真实数据 ---
+data/incoming/*
+!data/incoming/.gitkeep
+data/output/*
+!data/output/.gitkeep
+
 # --- IEEE-CIS 原始数据：绝不提交（保留放置说明） ---
 data/raw/ieee_cis/*
 !data/raw/ieee_cis/README.md

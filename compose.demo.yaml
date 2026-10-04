@@ -40,3 +40,45 @@ services:
       timeout: 3s
       retries: 6
       start_period: 20s
+
+  # Optional CSV batch adapter. It is profile-gated so the normal demo startup
+  # never consumes an input file accidentally.
+  csv-runner:
+    profiles: ["batch"]
+    image: ai-detector-risk-demo:local
+    depends_on:
+      risk-demo:
+        condition: service_healthy
+    entrypoint: ["python", "scripts/score_external_csv.py"]
+    command:
+      - --input
+      - /data/incoming/external.csv
+      - --output
+      - /data/output/external_scores.csv
+      - --base-url
+      - http://risk-demo:8000
+      - --id-column
+      - TransactionID
+      - --label-column
+      - isFraud
+    volumes:
+      - type: bind
+        source: ./data/incoming
+        target: /data/incoming
+        read_only: true
+      - type: bind
+        source: ./data/output
+        target: /data/output
+        read_only: false
+    working_dir: /app
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    user: "10001:10001"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"

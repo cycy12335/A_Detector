@@ -20,7 +20,7 @@ COPY constraints/cw014-ci.txt constraints/cw014-ci.txt
 COPY src ./src
 COPY configs/demo_service.yaml configs/demo_service.yaml
 COPY configs/risk_policy.yaml configs/risk_policy.yaml
-COPY scripts/run_demo.py scripts/run_demo.py
+COPY scripts/run_demo.py scripts/score_external_csv.py scripts/
 
 # Runtime dependencies are installed from binary wheels; the ignored model bundle is
 # intentionally not copied into the image.
